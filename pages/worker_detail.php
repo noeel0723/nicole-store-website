@@ -35,6 +35,16 @@ $totalPaid = $totalPaid->fetchColumn();
 
 $pendingCommission = $totalEarned - $totalPaid;
 
+// Komisi periodik untuk evaluasi performa
+$periodCommissionStmt = $db->prepare("\n    SELECT\n        COALESCE(SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN amount ELSE 0 END), 0) as daily_commission,\n        COALESCE(SUM(CASE WHEN created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) THEN amount ELSE 0 END), 0) as weekly_commission,\n        COALESCE(SUM(CASE WHEN MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE()) THEN amount ELSE 0 END), 0) as monthly_commission\n    FROM worker_commissions\n    WHERE worker_id = ? AND type = 'earned'\n");
+$periodCommissionStmt->execute([$workerId]);
+$periodCommission = $periodCommissionStmt->fetch();
+
+// Engagement periodik berbasis penyelesaian order
+$periodOrdersStmt = $db->prepare("\n    SELECT\n        COALESCE(SUM(CASE WHEN DATE(completed_at) = CURRENT_DATE() THEN 1 ELSE 0 END), 0) as daily_completed,\n        COALESCE(SUM(CASE WHEN completed_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END), 0) as weekly_completed,\n        COALESCE(SUM(CASE WHEN MONTH(completed_at) = MONTH(CURRENT_DATE()) AND YEAR(completed_at) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END), 0) as monthly_completed\n    FROM orders\n    WHERE worker_id = ? AND status = 'completed'\n");
+$periodOrdersStmt->execute([$workerId]);
+$periodOrders = $periodOrdersStmt->fetch();
+
 // Commission ledger entries
 $ledger = $db->prepare("
     SELECT wc.*, o.id as order_number
@@ -90,6 +100,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_commission'])) {
         <div class="card" style="margin-bottom:20px;">
             <div class="card-header">
                 <h3><i class='bx bx-book' style="color:var(--warning)"></i> Buku Besar Komisi</h3>
+            </div>
+
+            <div class="period-metrics-grid" style="margin-bottom: 16px;">
+                <div class="period-metric-card">
+                    <span class="period-metric-label">Komisi Hari Ini</span>
+                    <strong class="period-metric-value"><?= formatRupiah($periodCommission['daily_commission']) ?></strong>
+                    <small class="period-metric-sub">Selesai: <?= (int)$periodOrders['daily_completed'] ?> pesanan</small>
+                </div>
+                <div class="period-metric-card">
+                    <span class="period-metric-label">Komisi 7 Hari</span>
+                    <strong class="period-metric-value"><?= formatRupiah($periodCommission['weekly_commission']) ?></strong>
+                    <small class="period-metric-sub">Selesai: <?= (int)$periodOrders['weekly_completed'] ?> pesanan</small>
+                </div>
+                <div class="period-metric-card">
+                    <span class="period-metric-label">Komisi Bulan Ini</span>
+                    <strong class="period-metric-value"><?= formatRupiah($periodCommission['monthly_commission']) ?></strong>
+                    <small class="period-metric-sub">Selesai: <?= (int)$periodOrders['monthly_completed'] ?> pesanan</small>
+                </div>
             </div>
 
             <div class="ledger-summary">

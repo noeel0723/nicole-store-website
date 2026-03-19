@@ -1047,6 +1047,40 @@ textarea.form-control {
 .ledger-item.paid .ledger-value { color: var(--success); }
 .ledger-item.remaining .ledger-value { color: var(--danger); }
 
+.period-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.period-metric-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+
+.period-metric-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.period-metric-value {
+    display: block;
+    font-size: 18px;
+    color: var(--primary);
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.period-metric-sub {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
 /* ============================================
    Alerts / Flash Messages
    ============================================ */
@@ -1372,6 +1406,10 @@ textarea.form-control {
 
     .ledger-summary {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .period-metrics-grid {
+        grid-template-columns: 1fr;
     }
 }
 

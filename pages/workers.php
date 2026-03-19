@@ -29,6 +29,9 @@ $stmt = $db->prepare("
     SELECT w.*, 
         (SELECT COUNT(*) FROM orders o WHERE o.worker_id = w.id AND o.status IN ('in_progress','pending_verification')) as active_orders,
         (SELECT COUNT(*) FROM orders o WHERE o.worker_id = w.id AND o.status = 'completed') as completed_orders,
+        (SELECT COALESCE(SUM(amount),0) FROM worker_commissions wc WHERE wc.worker_id = w.id AND wc.type = 'earned' AND DATE(wc.created_at) = CURRENT_DATE()) as earned_today,
+        (SELECT COALESCE(SUM(amount),0) FROM worker_commissions wc WHERE wc.worker_id = w.id AND wc.type = 'earned' AND wc.created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) as earned_week,
+        (SELECT COALESCE(SUM(amount),0) FROM worker_commissions wc WHERE wc.worker_id = w.id AND wc.type = 'earned' AND MONTH(wc.created_at) = MONTH(CURRENT_DATE()) AND YEAR(wc.created_at) = YEAR(CURRENT_DATE())) as earned_month,
         (SELECT COALESCE(SUM(amount),0) FROM worker_commissions wc WHERE wc.worker_id = w.id AND wc.type = 'earned') as total_earned,
         (SELECT COALESCE(SUM(amount),0) FROM worker_commissions wc WHERE wc.worker_id = w.id AND wc.type = 'paid') as total_paid
     FROM workers w
@@ -66,6 +69,9 @@ $workers = $stmt->fetchAll();
                     <th>Worker</th>
                     <th>Rank</th>
                     <th>Spesialisasi</th>
+                    <th>Komisi Hari Ini</th>
+                    <th>Komisi 7 Hari</th>
+                    <th>Komisi Bulan Ini</th>
                     <th>Pesanan Aktif</th>
                     <th>Selesai</th>
                     <th>Saldo Komisi</th>
@@ -75,7 +81,7 @@ $workers = $stmt->fetchAll();
             </thead>
             <tbody>
                 <?php if (empty($workers)): ?>
-                <tr><td colspan="8"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Worker</h3><p>Rekrut worker pertama Anda.</p></div></td></tr>
+                <tr><td colspan="11"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Worker</h3><p>Rekrut worker pertama Anda.</p></div></td></tr>
                 <?php else: ?>
                 <?php foreach ($workers as $w): ?>
                 <?php $pendingCommission = $w['total_earned'] - $w['total_paid']; ?>
@@ -93,6 +99,9 @@ $workers = $stmt->fetchAll();
                     </td>
                     <td style="font-weight:600; font-size:13px;"><?= sanitize($w['rank_info'] ?? '-') ?></td>
                     <td style="font-size:13px;"><?= sanitize($w['specialization'] ?? '-') ?></td>
+                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_today']) ?></td>
+                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_week']) ?></td>
+                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_month']) ?></td>
                     <td style="font-weight:700; text-align:center;"><?= $w['active_orders'] ?></td>
                     <td style="text-align:center; color:var(--text-muted);"><?= $w['completed_orders'] ?></td>
                     <td>

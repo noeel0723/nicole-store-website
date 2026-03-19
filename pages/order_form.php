@@ -135,23 +135,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-row">
             <div class="form-group">
                 <label>Rank Awal</label>
-                <select name="rank_from" class="form-control" required>
-                    <option value="">Pilih Rank Awal</option>
-                    <?php foreach (MLBB_RANKS as $rank): ?>
-                    <option value="<?= $rank ?>" <?= ($isEdit && $order['rank_from'] === $rank) ? 'selected' : '' ?>><?= $rank ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" name="rank_from" class="form-control" required list="mlbbRanks"
+                       placeholder="Ketik rank awal"
+                       value="<?= $isEdit ? sanitize($order['rank_from']) : '' ?>">
             </div>
             <div class="form-group">
                 <label>Rank Tujuan</label>
-                <select name="rank_to" class="form-control" required>
-                    <option value="">Pilih Rank Tujuan</option>
-                    <?php foreach (MLBB_RANKS as $rank): ?>
-                    <option value="<?= $rank ?>" <?= ($isEdit && $order['rank_to'] === $rank) ? 'selected' : '' ?>><?= $rank ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" name="rank_to" class="form-control" required list="mlbbRanks"
+                       placeholder="Ketik rank tujuan"
+                       value="<?= $isEdit ? sanitize($order['rank_to']) : '' ?>">
             </div>
         </div>
+
+        <datalist id="mlbbRanks">
+            <?php foreach (MLBB_RANKS as $rank): ?>
+            <option value="<?= $rank ?>"></option>
+            <?php endforeach; ?>
+        </datalist>
 
         <div class="form-row">
             <div class="form-group">

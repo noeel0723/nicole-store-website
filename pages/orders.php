@@ -1,6 +1,6 @@
 <?php
 /**
- * Orders List - Kanban Board & Table View
+ * Orders List - Table View Only
  */
 $db = getDB();
 
@@ -71,19 +71,6 @@ $stmt = $db->prepare("
 ");
 $stmt->execute($params);
 $allOrders = $stmt->fetchAll();
-
-// Group by status for Kanban
-$kanbanGroups = [
-    'unassigned' => [],
-    'in_progress' => [],
-    'pending_verification' => [],
-    'completed' => []
-];
-foreach ($allOrders as $order) {
-    $kanbanGroups[$order['status']][] = $order;
-}
-
-$view = $_GET['view'] ?? 'kanban';
 ?>
 
 <div class="page-header">
@@ -91,160 +78,20 @@ $view = $_GET['view'] ?? 'kanban';
         <h2>Manajemen Pesanan</h2>
         <p>Total: <?= count($allOrders) ?> pesanan</p>
     </div>
-    <div class="btn-group">
-        <div class="view-toggle">
-            <button onclick="location.href='index.php?page=orders&view=kanban'" class="<?= $view === 'kanban' ? 'active' : '' ?>">
-                <i class='bx bx-columns'></i> Kanban
-            </button>
-            <button onclick="location.href='index.php?page=orders&view=table'" class="<?= $view === 'table' ? 'active' : '' ?>">
-                <i class='bx bx-table'></i> Table
-            </button>
-        </div>
-        <a href="index.php?page=order_form" class="btn btn-primary">
-            <i class='bx bx-plus'></i> Tambah Pesanan
-        </a>
-    </div>
+    <a href="index.php?page=order_form" class="btn btn-primary">
+        <i class='bx bx-plus'></i> Tambah Pesanan
+    </a>
 </div>
 
-<?php if ($view === 'kanban'): ?>
-<!-- ============= KANBAN VIEW ============= -->
-<div class="kanban-board">
-    <!-- Unassigned -->
-    <div class="kanban-column unassigned">
-        <div class="kanban-column-header">
-            <h4><i class='bx bx-time-five'></i> Unassigned</h4>
-            <span class="count"><?= count($kanbanGroups['unassigned']) ?></span>
-        </div>
-        <?php foreach ($kanbanGroups['unassigned'] as $o): ?>
-        <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="kanban-card">
-            <div class="kc-header">
-                <span class="kc-id">#<?= $o['id'] ?></span>
-                <?= paymentLabel($o['payment_status']) ?>
-            </div>
-            <div class="kc-title"><?= sanitize($o['customer_name']) ?></div>
-            <div class="kc-rank">
-                <i class='bx bx-trophy'></i>
-                <?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?>
-            </div>
-            <div class="kc-footer">
-                <span class="price"><?= formatRupiah($o['price']) ?></span>
-                <?php if ($o['deadline']): ?>
-                    <?php $isUrgent = strtotime($o['deadline']) <= strtotime('+2 days'); ?>
-                    <span class="deadline <?= $isUrgent ? 'urgent' : '' ?>">
-                        <i class='bx bx-calendar'></i> <?= date('d M', strtotime($o['deadline'])) ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-        </a>
-        <?php endforeach; ?>
-        <?php if (empty($kanbanGroups['unassigned'])): ?>
-            <div class="empty-state" style="padding:30px 10px;"><p style="font-size:12px">Tidak ada pesanan</p></div>
-        <?php endif; ?>
-    </div>
-
-    <!-- In Progress -->
-    <div class="kanban-column in-progress">
-        <div class="kanban-column-header">
-            <h4><i class='bx bx-loader-circle'></i> In Progress</h4>
-            <span class="count"><?= count($kanbanGroups['in_progress']) ?></span>
-        </div>
-        <?php foreach ($kanbanGroups['in_progress'] as $o): ?>
-        <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="kanban-card">
-            <div class="kc-header">
-                <span class="kc-id">#<?= $o['id'] ?></span>
-                <?= paymentLabel($o['payment_status']) ?>
-            </div>
-            <div class="kc-title"><?= sanitize($o['customer_name']) ?></div>
-            <div class="kc-rank">
-                <i class='bx bx-trophy'></i>
-                <?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?>
-            </div>
-            <?php if ($o['worker_name']): ?>
-                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
-                    <i class='bx bx-user'></i> <?= sanitize($o['worker_name']) ?>
-                </div>
-            <?php endif; ?>
-            <div class="kc-footer">
-                <span class="price"><?= formatRupiah($o['price']) ?></span>
-                <?php if ($o['deadline']): ?>
-                    <?php $isUrgent = strtotime($o['deadline']) <= strtotime('+2 days'); ?>
-                    <span class="deadline <?= $isUrgent ? 'urgent' : '' ?>">
-                        <i class='bx bx-calendar'></i> <?= date('d M', strtotime($o['deadline'])) ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-        </a>
-        <?php endforeach; ?>
-        <?php if (empty($kanbanGroups['in_progress'])): ?>
-            <div class="empty-state" style="padding:30px 10px;"><p style="font-size:12px">Tidak ada pesanan</p></div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Pending Verification -->
-    <div class="kanban-column pending">
-        <div class="kanban-column-header">
-            <h4><i class='bx bx-check-double'></i> Pending</h4>
-            <span class="count"><?= count($kanbanGroups['pending_verification']) ?></span>
-        </div>
-        <?php foreach ($kanbanGroups['pending_verification'] as $o): ?>
-        <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="kanban-card">
-            <div class="kc-header">
-                <span class="kc-id">#<?= $o['id'] ?></span>
-                <?= paymentLabel($o['payment_status']) ?>
-            </div>
-            <div class="kc-title"><?= sanitize($o['customer_name']) ?></div>
-            <div class="kc-rank">
-                <i class='bx bx-trophy'></i>
-                <?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?>
-            </div>
-            <div class="kc-footer">
-                <span class="price"><?= formatRupiah($o['price']) ?></span>
-            </div>
-        </a>
-        <?php endforeach; ?>
-        <?php if (empty($kanbanGroups['pending_verification'])): ?>
-            <div class="empty-state" style="padding:30px 10px;"><p style="font-size:12px">Tidak ada pesanan</p></div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Completed -->
-    <div class="kanban-column completed">
-        <div class="kanban-column-header">
-            <h4><i class='bx bx-check-circle'></i> Completed</h4>
-            <span class="count"><?= count($kanbanGroups['completed']) ?></span>
-        </div>
-        <?php foreach (array_slice($kanbanGroups['completed'], 0, 10) as $o): ?>
-        <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="kanban-card">
-            <div class="kc-header">
-                <span class="kc-id">#<?= $o['id'] ?></span>
-                <?= paymentLabel($o['payment_status']) ?>
-            </div>
-            <div class="kc-title"><?= sanitize($o['customer_name']) ?></div>
-            <div class="kc-rank">
-                <i class='bx bx-trophy'></i>
-                <?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?>
-            </div>
-            <div class="kc-footer">
-                <span class="price"><?= formatRupiah($o['price']) ?></span>
-            </div>
-        </a>
-        <?php endforeach; ?>
-        <?php if (empty($kanbanGroups['completed'])): ?>
-            <div class="empty-state" style="padding:30px 10px;"><p style="font-size:12px">Tidak ada pesanan</p></div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<?php else: ?>
 <!-- ============= TABLE VIEW ============= -->
 <div class="filter-bar">
     <div class="search-box">
         <i class='bx bx-search'></i>
         <input type="text" placeholder="Cari pelanggan atau rank..." id="searchOrders"
                value="<?= sanitize($searchQuery) ?>"
-               onkeydown="if(event.key==='Enter') location.href='index.php?page=orders&view=table&search='+this.value">
+               onkeydown="if(event.key==='Enter') location.href='index.php?page=orders&search='+this.value">
     </div>
-    <select class="filter-select" onchange="location.href='index.php?page=orders&view=table&status='+this.value">
+    <select class="filter-select" onchange="location.href='index.php?page=orders&status='+this.value">
         <option value="">Semua Status</option>
         <option value="unassigned" <?= $statusFilter === 'unassigned' ? 'selected' : '' ?>>Unassigned</option>
         <option value="in_progress" <?= $statusFilter === 'in_progress' ? 'selected' : '' ?>>In Progress</option>
@@ -287,7 +134,7 @@ $view = $_GET['view'] ?? 'kanban';
                         <div class="btn-group">
                             <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
                             <a href="index.php?page=order_form&id=<?= $o['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
-                            <a href="index.php?page=orders&view=table&delete=<?= $o['id'] ?>" class="btn-icon" title="Hapus"
+                            <a href="index.php?page=orders&delete=<?= $o['id'] ?>" class="btn-icon" title="Hapus"
                                onclick="return confirm('Yakin ingin menghapus pesanan ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
                         </div>
                     </td>
@@ -298,4 +145,3 @@ $view = $_GET['view'] ?? 'kanban';
         </table>
     </div>
 </div>
-<?php endif; ?>
