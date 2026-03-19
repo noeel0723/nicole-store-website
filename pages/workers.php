@@ -21,8 +21,8 @@ $search = $_GET['search'] ?? '';
 $where = '';
 $params = [];
 if ($search) {
-    $where = "WHERE w.name LIKE ? OR w.specialization LIKE ? OR w.rank_info LIKE ?";
-    $params = ["%$search%", "%$search%", "%$search%"];
+    $where = "WHERE w.name LIKE ? OR w.specialization LIKE ? OR w.rank_info LIKE ? OR w.roles LIKE ? OR w.notes LIKE ?";
+    $params = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
 }
 
 $stmt = $db->prepare("
@@ -63,15 +63,15 @@ $workers = $stmt->fetchAll();
 
 <div class="card">
     <div class="table-wrapper">
-        <table>
+        <table class="workers-table">
             <thead>
                 <tr>
-                    <th>Worker</th>
-                    <th>Rank</th>
-                    <th>Spesialisasi</th>
-                    <th>Komisi Hari Ini</th>
-                    <th>Komisi 7 Hari</th>
-                    <th>Komisi Bulan Ini</th>
+                    <th>Nama Worker</th>
+                    <th>Highest Rank</th>
+                    <th>3 Role Utama</th>
+                    <th>Hari Ini</th>
+                    <th>7 Hari</th>
+                    <th>Bulan Ini</th>
                     <th>Pesanan Aktif</th>
                     <th>Selesai</th>
                     <th>Saldo Komisi</th>
@@ -86,19 +86,19 @@ $workers = $stmt->fetchAll();
                 <?php foreach ($workers as $w): ?>
                 <?php $pendingCommission = $w['total_earned'] - $w['total_paid']; ?>
                 <tr>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:10px;">
+                    <td class="worker-cell">
+                        <div class="worker-mini">
                             <div style="width:36px; height:36px; background:linear-gradient(135deg, var(--primary), var(--accent)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0;">
                                 <?= strtoupper(substr($w['name'], 0, 1)) ?>
                             </div>
-                            <div>
-                                <strong style="display:block; font-size:14px; color:var(--text-primary);"><?= sanitize($w['name']) ?></strong>
-                                <span style="font-size:11px; color:var(--text-muted);"><?= sanitize($w['phone'] ?? '-') ?></span>
+                            <div class="worker-mini-info">
+                                <strong class="worker-mini-name"><?= sanitize($w['name']) ?></strong>
+                                <span class="worker-mini-contact"><?= sanitize($w['phone'] ?? '-') ?></span>
                             </div>
                         </div>
                     </td>
                     <td style="font-weight:600; font-size:13px;"><?= sanitize($w['rank_info'] ?? '-') ?></td>
-                    <td style="font-size:13px;"><?= sanitize($w['specialization'] ?? '-') ?></td>
+                    <td class="worker-specialization" style="font-size:13px;"><?= sanitize($w['roles'] ?? '-') ?></td>
                     <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_today']) ?></td>
                     <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_week']) ?></td>
                     <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_month']) ?></td>

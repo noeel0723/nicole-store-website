@@ -100,8 +100,8 @@ $orderHistory = $orders->fetchAll();
             </div>
 
             <div class="detail-row">
-                <span class="label">No. HP</span>
-                <span class="value"><?= sanitize($customer['phone'] ?? '-') ?></span>
+                <span class="label">Kontak</span>
+                <span class="value"><?= sanitize(formatCustomerContact($customer['phone'] ?? '')) ?></span>
             </div>
             <div class="detail-row">
                 <span class="label">ID Game</span>

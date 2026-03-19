@@ -248,20 +248,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_commission'])) {
             </div>
 
             <div class="detail-row">
-                <span class="label">No. HP</span>
+                <span class="label">Rekening / E-Wallet</span>
                 <span class="value"><?= sanitize($worker['phone'] ?? '-') ?></span>
             </div>
             <div class="detail-row">
-                <span class="label">Rank</span>
+                <span class="label">Akun Social Media</span>
+                <span class="value"><?= sanitize($worker['notes'] ?? '-') ?></span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Highest Rank</span>
                 <span class="value"><?= sanitize($worker['rank_info'] ?? '-') ?></span>
             </div>
             <div class="detail-row">
-                <span class="label">Spesialisasi</span>
-                <span class="value" style="max-width:200px; text-align:right;"><?= sanitize($worker['specialization'] ?? '-') ?></span>
+                <span class="label">3 Role Utama</span>
+                <span class="value" style="max-width:200px; text-align:right;"><?= sanitize($worker['roles'] ?? '-') ?></span>
             </div>
             <div class="detail-row">
-                <span class="label">Role</span>
-                <span class="value"><?= sanitize($worker['roles'] ?? '-') ?></span>
+                <span class="label">Hero Andalan per Role</span>
+                <span class="value" style="max-width:220px; text-align:right; white-space:normal;"><?= nl2br(sanitize($worker['specialization'] ?? '-')) ?></span>
             </div>
             <div class="detail-row">
                 <span class="label">Pesanan Aktif</span>
@@ -275,13 +279,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_commission'])) {
                 <span class="label">Bergabung</span>
                 <span class="value" style="font-size:12px;"><?= date('d M Y', strtotime($worker['created_at'])) ?></span>
             </div>
-
-            <?php if ($worker['notes']): ?>
-            <div style="margin-top:16px; padding:12px; background:var(--bg-input); border-radius:var(--radius-sm); font-size:13px; color:var(--text-secondary);">
-                <strong style="display:block; margin-bottom:4px; font-size:11px; color:var(--text-muted);">CATATAN</strong>
-                <?= nl2br(sanitize($worker['notes'])) ?>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>

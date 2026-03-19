@@ -536,6 +536,85 @@ table tbody tr:last-child td {
     border-bottom: none;
 }
 
+.workers-table {
+    table-layout: auto;
+    min-width: 1280px;
+}
+
+.workers-table th,
+.workers-table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+}
+
+.workers-table th:nth-child(1),
+.workers-table td:nth-child(1) {
+    width: 220px;
+}
+
+.workers-table th:nth-child(3),
+.workers-table td:nth-child(3) {
+    width: 170px;
+}
+
+.workers-table th:nth-child(4),
+.workers-table td:nth-child(4),
+.workers-table th:nth-child(5),
+.workers-table td:nth-child(5),
+.workers-table th:nth-child(6),
+.workers-table td:nth-child(6) {
+    width: 125px;
+}
+
+.workers-table thead th {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-align: center;
+}
+
+.workers-table thead th:nth-child(1),
+.workers-table thead th:nth-child(2),
+.workers-table thead th:nth-child(3) {
+    text-align: left;
+}
+
+.workers-table td:nth-child(2),
+.workers-table td:nth-child(4),
+.workers-table td:nth-child(5),
+.workers-table td:nth-child(6),
+.workers-table td:nth-child(7),
+.workers-table td:nth-child(8),
+.workers-table td:nth-child(9),
+.workers-table td:nth-child(10),
+.workers-table td:nth-child(11) {
+    text-align: center;
+}
+
+.worker-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.worker-mini-info {
+    min-width: 0;
+}
+
+.worker-mini-name,
+.worker-mini-contact,
+.worker-specialization {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.worker-mini-contact {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
 /* ============================================
    Badges
    ============================================ */

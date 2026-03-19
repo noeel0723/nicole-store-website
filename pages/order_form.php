@@ -22,6 +22,20 @@ $workers = $db->query("SELECT id, name, rank_info FROM workers WHERE is_active =
 // Get customers for autocomplete
 $customers = $db->query("SELECT id, name, phone, game_id FROM customers ORDER BY name")->fetchAll();
 
+// Rank suggestions: gabungkan Mythic V-I menjadi Mythic
+$rankSuggestions = [];
+$isMythicAdded = false;
+foreach (MLBB_RANKS as $rank) {
+    if (preg_match('/^Mythic\s+[IVX]+$/i', $rank)) {
+        if (!$isMythicAdded) {
+            $rankSuggestions[] = 'Mythic';
+            $isMythicAdded = true;
+        }
+        continue;
+    }
+    $rankSuggestions[] = $rank;
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customerId = (int)$_POST['customer_id'];
@@ -32,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestRole = trim($_POST['request_role'] ?? '');
     $specialRequest = trim($_POST['special_request'] ?? '');
     $price = (float)str_replace(['.', ','], ['', '.'], $_POST['price']);
-    $workerCommission = (float)str_replace(['.', ','], ['', '.'], $_POST['worker_commission']);
+    $workerCommission = round($price * 0.7, 2);
     $paymentStatus = $_POST['payment_status'];
     $deadline = !empty($_POST['deadline']) ? $_POST['deadline'] : null;
 
@@ -101,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="autocomplete-item" data-id="<?= $c['id'] ?>" data-name="<?= sanitize($c['name']) ?>"
                      data-phone="<?= sanitize($c['phone']) ?>" data-gameid="<?= sanitize($c['game_id']) ?>">
                     <?= sanitize($c['name']) ?>
-                    <small>ID Game: <?= sanitize($c['game_id'] ?? '-') ?> · <?= sanitize($c['phone'] ?? '-') ?></small>
+                    <small>ID Game: <?= sanitize($c['game_id'] ?? '-') ?> · <?= sanitize(formatCustomerContact($c['phone'] ?? '')) ?></small>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -148,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <datalist id="mlbbRanks">
-            <?php foreach (MLBB_RANKS as $rank): ?>
+            <?php foreach ($rankSuggestions as $rank): ?>
             <option value="<?= $rank ?>"></option>
             <?php endforeach; ?>
         </datalist>
@@ -183,12 +197,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-row">
             <div class="form-group">
                 <label>Total Harga (Rp)</label>
-                <input type="text" name="price" class="form-control" placeholder="Contoh: 150000" required
+                <input type="text" name="price" id="orderPrice" class="form-control" placeholder="Contoh: 150000" required
                        value="<?= $isEdit ? $order['price'] : '' ?>">
             </div>
             <div class="form-group">
-                <label>Komisi Worker (Rp)</label>
-                <input type="text" name="worker_commission" class="form-control" placeholder="Contoh: 75000"
+                <label>Komisi Worker (70%)</label>
+                <input type="text" name="worker_commission" id="workerCommission" class="form-control" placeholder="Otomatis dari harga"
+                       readonly
                        value="<?= $isEdit ? $order['worker_commission'] : '' ?>">
             </div>
         </div>
@@ -299,5 +314,25 @@ if (searchInput) {
             newCustomerFields.style.display = 'none';
         });
     });
+}
+
+// Auto-calculate worker commission = 70% of total price
+const orderPriceInput = document.getElementById('orderPrice');
+const workerCommissionInput = document.getElementById('workerCommission');
+
+function parseToNumber(value) {
+    if (!value) return 0;
+    const cleaned = value.toString().replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+    const num = parseFloat(cleaned);
+    return Number.isFinite(num) ? num : 0;
+}
+
+if (orderPriceInput && workerCommissionInput) {
+    const updateCommission = () => {
+        const price = parseToNumber(orderPriceInput.value);
+        workerCommissionInput.value = Math.round(price * 0.7);
+    };
+    orderPriceInput.addEventListener('input', updateCommission);
+    updateCommission();
 }
 </script>

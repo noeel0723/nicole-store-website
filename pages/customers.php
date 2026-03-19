@@ -57,7 +57,7 @@ $customers = $stmt->fetchAll();
                 <tr>
                     <th>#</th>
                     <th>Nama</th>
-                    <th>No. HP</th>
+                    <th>Kontak</th>
                     <th>ID Game</th>
                     <th>Total Order</th>
                     <th>Total Spent</th>
@@ -75,7 +75,7 @@ $customers = $stmt->fetchAll();
                     <td style="font-weight:600; color:var(--text-primary);">
                         <?= sanitize($c['name']) ?>
                     </td>
-                    <td><?= sanitize($c['phone'] ?? '-') ?></td>
+                    <td><?= sanitize(formatCustomerContact($c['phone'] ?? '')) ?></td>
                     <td style="font-family:monospace; font-size:13px;"><?= sanitize($c['game_id'] ?? '-') ?></td>
                     <td style="font-weight:600;"><?= $c['total_orders'] ?></td>
                     <td style="color:var(--success); font-weight:600;"><?= formatRupiah($c['total_spent']) ?></td>

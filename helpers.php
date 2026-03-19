@@ -39,6 +39,69 @@ function sanitize($str) {
     return htmlspecialchars(trim($str), ENT_QUOTES, 'UTF-8');
 }
 
+function parseCustomerContact($storedContact) {
+    $raw = trim((string)($storedContact ?? ''));
+    if ($raw === '') {
+        return ['phone' => '', 'social' => ''];
+    }
+
+    // New format: phone:...|social:...
+    if (strpos($raw, '|') !== false) {
+        $result = ['phone' => '', 'social' => ''];
+        $parts = explode('|', $raw);
+        foreach ($parts as $part) {
+            $piece = trim($part);
+            if (stripos($piece, 'phone:') === 0) {
+                $result['phone'] = trim(substr($piece, 6));
+            } elseif (stripos($piece, 'social:') === 0) {
+                $result['social'] = trim(substr($piece, 7));
+            }
+        }
+        return $result;
+    }
+
+    // Backward compatibility: old single-type format
+    if (stripos($raw, 'social:') === 0) {
+        return ['phone' => '', 'social' => trim(substr($raw, 7))];
+    }
+
+    if (stripos($raw, 'phone:') === 0) {
+        return ['phone' => trim(substr($raw, 6)), 'social' => ''];
+    }
+
+    // Legacy plain value treated as phone
+    return ['phone' => $raw, 'social' => ''];
+}
+
+function buildCustomerContact($phone, $social) {
+    $cleanPhone = trim((string)$phone);
+    $cleanSocial = trim((string)$social);
+
+    if ($cleanPhone === '' && $cleanSocial === '') {
+        return '';
+    }
+
+    return 'phone:' . $cleanPhone . '|social:' . $cleanSocial;
+}
+
+function formatCustomerContact($storedContact) {
+    $contact = parseCustomerContact($storedContact);
+
+    $parts = [];
+    if ($contact['phone'] !== '') {
+        $parts[] = 'No. HP: ' . $contact['phone'];
+    }
+    if ($contact['social'] !== '') {
+        $parts[] = 'Sosmed: ' . $contact['social'];
+    }
+
+    if (empty($parts)) {
+        return '-';
+    }
+
+    return implode(' | ', $parts);
+}
+
 function statusLabel($status) {
     $labels = [
         'unassigned' => '<span class="badge badge-warning">Unassigned</span>',

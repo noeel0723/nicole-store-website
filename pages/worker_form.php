@@ -16,14 +16,73 @@ if ($isEdit) {
     }
 }
 
+$mainRoles = ['', '', ''];
+$roleHeroes = ['', '', ''];
+$socialMedia = '';
+
+if ($isEdit) {
+    $socialMedia = trim((string)($worker['notes'] ?? ''));
+
+    $savedRoles = array_values(array_filter(array_map('trim', explode(',', (string)($worker['roles'] ?? '')))));
+    for ($i = 0; $i < 3; $i++) {
+        $mainRoles[$i] = $savedRoles[$i] ?? '';
+    }
+
+    $specLines = preg_split('/\r\n|\r|\n/', (string)($worker['specialization'] ?? ''));
+    $idx = 0;
+    foreach ($specLines as $line) {
+        if ($idx >= 3) {
+            break;
+        }
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+
+        if (strpos($line, ':') !== false) {
+            [$roleLabel, $heroLabel] = array_map('trim', explode(':', $line, 2));
+            if ($mainRoles[$idx] === '') {
+                $mainRoles[$idx] = $roleLabel;
+            }
+            $roleHeroes[$idx] = $heroLabel;
+        } else {
+            $roleHeroes[$idx] = $line;
+        }
+        $idx++;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
-    $phone = trim($_POST['phone'] ?? '');
-    $specialization = trim($_POST['specialization'] ?? '');
+    $paymentAccount = trim($_POST['payment_account'] ?? '');
+    $socialMedia = trim($_POST['social_media'] ?? '');
     $rankInfo = trim($_POST['rank_info'] ?? '');
-    $roles = trim($_POST['roles'] ?? '');
+    $mainRoles = [
+        trim($_POST['main_role_1'] ?? ''),
+        trim($_POST['main_role_2'] ?? ''),
+        trim($_POST['main_role_3'] ?? ''),
+    ];
+    $roleHeroes = [
+        trim($_POST['hero_role_1'] ?? ''),
+        trim($_POST['hero_role_2'] ?? ''),
+        trim($_POST['hero_role_3'] ?? ''),
+    ];
+
+    $roles = implode(', ', array_values(array_filter($mainRoles)));
+
+    $specializationLines = [];
+    for ($i = 0; $i < 3; $i++) {
+        if ($mainRoles[$i] === '' && $roleHeroes[$i] === '') {
+            continue;
+        }
+        $roleLabel = $mainRoles[$i] !== '' ? $mainRoles[$i] : 'Role ' . ($i + 1);
+        $heroLabel = $roleHeroes[$i] !== '' ? $roleHeroes[$i] : '-';
+        $specializationLines[] = $roleLabel . ': ' . $heroLabel;
+    }
+    $specialization = implode(PHP_EOL, $specializationLines);
+
     $isActive = isset($_POST['is_active']) ? 1 : 0;
-    $notes = trim($_POST['notes'] ?? '');
+    $notes = $socialMedia;
 
     if (empty($name)) {
         flash('error', 'Nama worker harus diisi.');
@@ -32,11 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($isEdit) {
         $stmt = $db->prepare("UPDATE workers SET name=?, phone=?, specialization=?, rank_info=?, roles=?, is_active=?, notes=?, updated_at=NOW() WHERE id=?");
-        $stmt->execute([$name, $phone, $specialization, $rankInfo, $roles, $isActive, $notes, $worker['id']]);
+        $stmt->execute([$name, $paymentAccount, $specialization, $rankInfo, $roles, $isActive, $notes, $worker['id']]);
         flash('success', 'Data worker berhasil diperbarui.');
     } else {
         $stmt = $db->prepare("INSERT INTO workers (name, phone, specialization, rank_info, roles, is_active, notes) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $phone, $specialization, $rankInfo, $roles, $isActive, $notes]);
+        $stmt->execute([$name, $paymentAccount, $specialization, $rankInfo, $roles, $isActive, $notes]);
         flash('success', 'Worker berhasil ditambahkan!');
     }
     redirect('index.php?page=workers');
@@ -54,44 +113,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="POST">
         <div class="form-row">
             <div class="form-group">
-                <label>Nama Worker *</label>
-                <input type="text" name="name" class="form-control" placeholder="Nama worker" required
+                <label>Nama Lengkap *</label>
+                <input type="text" name="name" class="form-control" placeholder="Nama lengkap worker" required
                        value="<?= $isEdit ? sanitize($worker['name']) : '' ?>">
             </div>
             <div class="form-group">
-                <label>No. HP / WhatsApp</label>
-                <input type="text" name="phone" class="form-control" placeholder="08xxx"
+                <label>Nomor Rekening / E-Wallet</label>
+                <input type="text" name="payment_account" class="form-control" placeholder="BCA 123xxxx / DANA 08xxx"
                        value="<?= $isEdit ? sanitize($worker['phone']) : '' ?>">
             </div>
         </div>
 
         <div class="form-group">
-            <label>Rank / Level Tertinggi</label>
-            <select name="rank_info" class="form-control">
-                <option value="">Pilih rank tertinggi</option>
-                <?php foreach (MLBB_RANKS as $rank): ?>
-                <option value="<?= $rank ?>" <?= ($isEdit && $worker['rank_info'] === $rank) ? 'selected' : '' ?>><?= $rank ?></option>
-                <?php endforeach; ?>
-            </select>
+            <label>Akun Media Social</label>
+            <input type="text" name="social_media" class="form-control" placeholder="@username / link profile"
+                   value="<?= sanitize($socialMedia) ?>">
         </div>
 
         <div class="form-group">
-            <label>Spesialisasi</label>
-            <input type="text" name="specialization" class="form-control"
-                   placeholder="Contoh: Ex-Immortal 200++, Paham Makro & Mikro"
-                   value="<?= $isEdit ? sanitize($worker['specialization']) : '' ?>">
+            <label>Highest Rank</label>
+            <input type="text" name="rank_info" class="form-control" placeholder="Contoh: Mythical Glory 150"
+                   value="<?= $isEdit ? sanitize($worker['rank_info']) : '' ?>">
         </div>
 
-        <div class="form-group">
-            <label>Role yang Dikuasai</label>
-            <input type="text" name="roles" class="form-control"
-                   placeholder="Contoh: Tank, Fighter, Assassin"
-                   value="<?= $isEdit ? sanitize($worker['roles']) : '' ?>">
+        <h3 style="margin:24px 0 16px; font-size:15px; color:var(--primary-light);">
+            <i class='bx bx-shield-quarter'></i> 3 Role Utama & Hero Andalan
+        </h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Role Utama 1</label>
+                <input type="text" name="main_role_1" class="form-control" placeholder="Contoh: Jungler"
+                       value="<?= sanitize($mainRoles[0]) ?>">
+            </div>
+            <div class="form-group">
+                <label>3 Hero Andalan (Role 1)</label>
+                <input type="text" name="hero_role_1" class="form-control" placeholder="Fanny, Ling, Lancelot"
+                       value="<?= sanitize($roleHeroes[0]) ?>">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Catatan</label>
-            <textarea name="notes" class="form-control" placeholder="Catatan tambahan tentang worker..."><?= $isEdit ? sanitize($worker['notes']) : '' ?></textarea>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Role Utama 2</label>
+                <input type="text" name="main_role_2" class="form-control" placeholder="Contoh: Gold Lane"
+                       value="<?= sanitize($mainRoles[1]) ?>">
+            </div>
+            <div class="form-group">
+                <label>3 Hero Andalan (Role 2)</label>
+                <input type="text" name="hero_role_2" class="form-control" placeholder="Claude, Brody, Beatrix"
+                       value="<?= sanitize($roleHeroes[1]) ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Role Utama 3</label>
+                <input type="text" name="main_role_3" class="form-control" placeholder="Contoh: Roamer"
+                       value="<?= sanitize($mainRoles[2]) ?>">
+            </div>
+            <div class="form-group">
+                <label>3 Hero Andalan (Role 3)</label>
+                <input type="text" name="hero_role_3" class="form-control" placeholder="Tigreal, Khufra, Mathilda"
+                       value="<?= sanitize($roleHeroes[2]) ?>">
+            </div>
         </div>
 
         <div class="form-group">

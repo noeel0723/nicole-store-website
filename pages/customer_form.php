@@ -16,9 +16,19 @@ if ($isEdit) {
     }
 }
 
+$phoneValue = '';
+$socialValue = '';
+if ($isEdit) {
+    $parsedContact = parseCustomerContact($customer['phone'] ?? '');
+    $phoneValue = $parsedContact['phone'];
+    $socialValue = $parsedContact['social'];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
-    $phone = trim($_POST['phone'] ?? '');
+    $phoneValue = trim($_POST['phone_value'] ?? '');
+    $socialValue = trim($_POST['social_value'] ?? '');
+    $phone = buildCustomerContact($phoneValue, $socialValue);
     $gameId = trim($_POST['game_id'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
 
@@ -57,9 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-row">
             <div class="form-group">
                 <label>No. HP / WhatsApp</label>
-                <input type="text" name="phone" class="form-control" placeholder="08xxx"
-                       value="<?= $isEdit ? sanitize($customer['phone']) : '' ?>">
+                <input type="text" name="phone_value" class="form-control" placeholder="08xxx"
+                       value="<?= sanitize($phoneValue) ?>">
             </div>
+            <div class="form-group">
+                <label>Username Social Media</label>
+                <input type="text" name="social_value" class="form-control" placeholder="@username / link profile"
+                       value="<?= sanitize($socialValue) ?>">
+            </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>ID Game MLBB</label>
                 <input type="text" name="game_id" class="form-control" placeholder="12345678 (1234)"
