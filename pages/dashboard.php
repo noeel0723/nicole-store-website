@@ -41,35 +41,6 @@ $workers = $db->query("
     ORDER BY active_orders ASC
 ")->fetchAll();
 
-// ======= Chart data: pendapatan 7 hari terakhir =======
-$chartData = $db->query("
-    SELECT DATE(completed_at) as day, SUM(price) as revenue, SUM(worker_commission) as commission
-    FROM orders
-    WHERE status = 'completed' AND completed_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-    GROUP BY DATE(completed_at)
-    ORDER BY day ASC
-")->fetchAll();
-
-$chartLabels = [];
-$chartRevenue = [];
-$chartCommission = [];
-for ($i = 6; $i >= 0; $i--) {
-    $date = date('Y-m-d', strtotime("-$i days"));
-    $chartLabels[] = date('d M', strtotime($date));
-    $found = false;
-    foreach ($chartData as $row) {
-        if ($row['day'] === $date) {
-            $chartRevenue[] = (float)$row['revenue'];
-            $chartCommission[] = (float)$row['commission'];
-            $found = true;
-            break;
-        }
-    }
-    if (!$found) {
-        $chartRevenue[] = 0;
-        $chartCommission[] = 0;
-    }
-}
 ?>
 
 <!-- Stat Cards -->
@@ -98,16 +69,8 @@ for ($i = 6; $i >= 0; $i--) {
 
 <!-- Main Grid -->
 <div class="grid-3">
-    <!-- Left: Critical Orders + Chart -->
+    <!-- Left: Critical Orders -->
     <div>
-        <!-- Revenue Chart -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="card-header">
-                <h3><i class='bx bx-line-chart' style="color: var(--primary-light);"></i> Pendapatan 7 Hari Terakhir</h3>
-            </div>
-            <canvas id="revenueChart" height="200"></canvas>
-        </div>
-
         <!-- Critical Orders -->
         <div class="card">
             <div class="card-header">
@@ -197,60 +160,3 @@ for ($i = 6; $i >= 0; $i--) {
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('revenueChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: <?= json_encode($chartLabels) ?>,
-                datasets: [
-                    {
-                        label: 'Pendapatan',
-                        data: <?= json_encode($chartRevenue) ?>,
-                        backgroundColor: 'rgba(108, 92, 231, 0.6)',
-                        borderColor: 'rgba(108, 92, 231, 1)',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                    },
-                    {
-                        label: 'Komisi',
-                        data: <?= json_encode($chartCommission) ?>,
-                        backgroundColor: 'rgba(0, 210, 211, 0.4)',
-                        borderColor: 'rgba(0, 210, 211, 1)',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { color: '#A7A7BE', font: { family: 'Inter' } }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        ticks: { color: '#6B6B80', font: { family: 'Inter', size: 11 } }
-                    },
-                    y: {
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        ticks: {
-                            color: '#6B6B80',
-                            font: { family: 'Inter', size: 11 },
-                            callback: function(v) { return 'Rp ' + v.toLocaleString('id-ID'); }
-                        }
-                    }
-                }
-            }
-        });
-    }
-});
-</script>
