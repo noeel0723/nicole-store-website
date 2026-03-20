@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rankTo = trim($_POST['rank_to']);
     $requestHero = trim($_POST['request_hero'] ?? '');
     $requestRole = trim($_POST['request_role'] ?? '');
+    $jokiType = trim($_POST['joki_type'] ?? '');
     $specialRequest = trim($_POST['special_request'] ?? '');
     $price = (float)str_replace(['.', ','], ['', '.'], $_POST['price']);
     $workerCommission = $isAdminSendiri ? 0 : round($price * 0.7, 2);
@@ -78,12 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($isEdit) {
-        $stmt = $db->prepare("UPDATE orders SET customer_id=?, worker_id=?, rank_from=?, rank_to=?, request_hero=?, request_role=?, special_request=?, price=?, worker_commission=?, payment_status=?, status=?, deadline=?, updated_at=NOW() WHERE id=?");
-        $stmt->execute([$customerId, $workerId, $rankFrom, $rankTo, $requestHero, $requestRole, $specialRequest, $price, $workerCommission, $paymentStatus, $status, $deadline, $order['id']]);
+        $stmt = $db->prepare("UPDATE orders SET customer_id=?, worker_id=?, rank_from=?, rank_to=?, request_hero=?, request_role=?, joki_type=?, special_request=?, price=?, worker_commission=?, payment_status=?, status=?, deadline=?, updated_at=NOW() WHERE id=?");
+        $stmt->execute([$customerId, $workerId, $rankFrom, $rankTo, $requestHero, $requestRole, $jokiType ?: null, $specialRequest, $price, $workerCommission, $paymentStatus, $status, $deadline, $order['id']]);
         flash('success', 'Pesanan berhasil diperbarui.');
     } else {
-        $stmt = $db->prepare("INSERT INTO orders (customer_id, worker_id, rank_from, rank_to, request_hero, request_role, special_request, price, worker_commission, payment_status, status, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$customerId, $workerId, $rankFrom, $rankTo, $requestHero, $requestRole, $specialRequest, $price, $workerCommission, $paymentStatus, $status, $deadline]);
+        $stmt = $db->prepare("INSERT INTO orders (customer_id, worker_id, rank_from, rank_to, request_hero, request_role, joki_type, special_request, price, worker_commission, payment_status, status, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$customerId, $workerId, $rankFrom, $rankTo, $requestHero, $requestRole, $jokiType ?: null, $specialRequest, $price, $workerCommission, $paymentStatus, $status, $deadline]);
         flash('success', 'Pesanan berhasil ditambahkan!');
     }
 
@@ -185,6 +186,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php foreach (MLBB_ROLES as $role): ?>
                     <option value="<?= $role ?>" <?= ($isEdit && $order['request_role'] === $role) ? 'selected' : '' ?>><?= $role ?></option>
                     <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tipe Joki</label>
+                <select name="joki_type" class="form-control">
+                    <option value="">Pilih Tipe Joki</option>
+                    <option value="joki_gendong" <?= ($isEdit && $order['joki_type'] === 'joki_gendong') ? 'selected' : '' ?>>Joki Gendong</option>
+                    <option value="joki_login" <?= ($isEdit && $order['joki_type'] === 'joki_login') ? 'selected' : '' ?>>Joki Login</option>
                 </select>
             </div>
         </div>

@@ -35,7 +35,7 @@ define('MLBB_RANKS', [
 
 // MLBB Roles
 define('MLBB_ROLES', [
-    'Tank', 'Fighter', 'Assassin', 'Mage', 'Marksman', 'Support'
+    'Midlaner', 'Roam', 'Jungler', 'Goldlane', 'Exp Lane'
 ]);
 
 // PDO Database Connection

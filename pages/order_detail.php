@@ -47,11 +47,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $newStatus = $_POST['new_status'];
     $validStatuses = ['unassigned', 'in_progress', 'pending_verification', 'completed'];
     if (in_array($newStatus, $validStatuses)) {
-        $completedAt = $newStatus === 'completed' ? date('Y-m-d H:i:s') : null;
-        $stmt = $db->prepare("UPDATE orders SET status = ?, completed_at = COALESCE(?, completed_at), updated_at = NOW() WHERE id = ?");
-        $stmt->execute([$newStatus, $completedAt, $orderId]);
 
+        // If completing, require proof photo
         if ($newStatus === 'completed') {
+            $proofPath = null;
+            if (isset($_FILES['proof_photo']) && $_FILES['proof_photo']['error'] === UPLOAD_ERR_OK) {
+                $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                $fileType = $_FILES['proof_photo']['type'];
+                if (in_array($fileType, $allowed)) {
+                    $ext = pathinfo($_FILES['proof_photo']['name'], PATHINFO_EXTENSION);
+                    $filename = 'proof_' . $orderId . '_' . time() . '.' . $ext;
+                    $uploadDir = __DIR__ . '/../uploads/proof/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    if (move_uploaded_file($_FILES['proof_photo']['tmp_name'], $uploadDir . $filename)) {
+                        $proofPath = 'uploads/proof/' . $filename;
+                    }
+                } else {
+                    flash('error', 'Format file tidak valid. Gunakan JPG, PNG, WEBP, atau GIF.');
+                    redirect('index.php?page=order_detail&id=' . $orderId);
+                }
+            } else {
+                flash('error', 'Wajib upload foto bukti/testimoni untuk menyelesaikan pesanan.');
+                redirect('index.php?page=order_detail&id=' . $orderId);
+            }
+
+            if (!$proofPath) {
+                flash('error', 'Gagal mengupload foto. Coba lagi.');
+                redirect('index.php?page=order_detail&id=' . $orderId);
+            }
+
+            $completedAt = date('Y-m-d H:i:s');
+            $stmt = $db->prepare("UPDATE orders SET status = ?, completed_at = ?, proof_photo = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$newStatus, $completedAt, $proofPath, $orderId]);
+
             // Commission entry
             if ($order['worker_id'] && $order['worker_commission'] > 0) {
                 $stmt = $db->prepare("INSERT INTO worker_commissions (worker_id, order_id, amount, type, notes) VALUES (?, ?, ?, 'earned', ?)");
@@ -62,6 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 
             // Auto log
             $db->prepare("INSERT INTO order_logs (order_id, message) VALUES (?, ?)")->execute([$orderId, '✅ Pesanan diselesaikan.']);
+
+        } else {
+            // Non-completed status update (no photo required)
+            $completedAt = null;
+            $stmt = $db->prepare("UPDATE orders SET status = ?, completed_at = COALESCE(?, completed_at), updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$newStatus, $completedAt, $orderId]);
         }
 
         flash('success', 'Status berhasil diperbarui.');
@@ -71,6 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 
 // Profit
 $profit = $order['price'] - $order['worker_commission'];
+
+// Joki type label
+$jokiTypeLabels = [
+    'joki_gendong' => 'Joki Gendong',
+    'joki_login' => 'Joki Login',
+];
+$jokiTypeDisplay = $jokiTypeLabels[$order['joki_type'] ?? ''] ?? null;
 ?>
 
 <div class="page-header">
@@ -114,6 +157,17 @@ $profit = $order['price'] - $order['worker_commission'];
                 <span class="label">Rank</span>
                 <span class="value"><?= sanitize($order['rank_from']) ?> → <?= sanitize($order['rank_to']) ?></span>
             </div>
+            <?php if ($jokiTypeDisplay): ?>
+            <div class="detail-row">
+                <span class="label">Tipe Joki</span>
+                <span class="value">
+                    <span class="badge <?= $order['joki_type'] === 'joki_gendong' ? 'badge-info' : 'badge-warning' ?>">
+                        <i class='bx <?= $order['joki_type'] === 'joki_gendong' ? 'bx-group' : 'bx-log-in' ?>' style="margin-right:4px;"></i>
+                        <?= $jokiTypeDisplay ?>
+                    </span>
+                </span>
+            </div>
+            <?php endif; ?>
             <?php if ($order['request_hero']): ?>
             <div class="detail-row">
                 <span class="label">Hero</span>
@@ -137,6 +191,24 @@ $profit = $order['price'] - $order['worker_commission'];
                 <span class="value"><?= $order['deadline'] ? date('d M Y', strtotime($order['deadline'])) : '-' ?></span>
             </div>
         </div>
+
+        <!-- Proof Photo (if completed) -->
+        <?php if ($order['proof_photo']): ?>
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+                <h3><i class='bx bx-camera' style="color:var(--success)"></i> Bukti / Testimoni</h3>
+            </div>
+            <div style="text-align:center;">
+                <img src="<?= sanitize($order['proof_photo']) ?>" alt="Bukti Testimoni"
+                     style="max-width:100%; max-height:400px; border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;"
+                     onclick="window.open(this.src, '_blank')">
+                <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                    <i class='bx bx-check-circle' style="color:var(--success);"></i>
+                    Foto bukti telah diupload
+                </p>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Financial -->
         <div class="card" style="margin-bottom:20px;">
@@ -244,15 +316,42 @@ $profit = $order['price'] - $order['worker_commission'];
 
             <?php if (!empty($actions)): ?>
                 <?php foreach ($actions as $status => $label): ?>
-                <form method="POST" style="margin-bottom:8px;">
-                    <input type="hidden" name="update_status" value="1">
-                    <input type="hidden" name="new_status" value="<?= $status ?>">
-                    <button type="submit" class="btn <?= $status === 'completed' ? 'btn-success' : 'btn-primary' ?>" style="width:100%;"
-                            <?= $status === 'completed' ? 'onclick="return confirm(\'Yakin pesanan sudah selesai?\')"' : '' ?>>
-                        <i class='bx <?= $status === 'completed' ? 'bx-check-circle' : 'bx-right-arrow-alt' ?>'></i>
-                        <?= $label ?>
-                    </button>
-                </form>
+                    <?php if ($status === 'completed'): ?>
+                    <!-- Complete order requires photo proof -->
+                    <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;" id="completeForm">
+                        <input type="hidden" name="update_status" value="1">
+                        <input type="hidden" name="new_status" value="completed">
+
+                        <div class="proof-upload-section" style="margin-bottom:12px; padding:16px; background:var(--bg-input); border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">
+                                <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti / Testimoni *
+                            </label>
+                            <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*"
+                                   style="width:100%; font-size:13px;" required>
+                            <div id="proofPreview" style="margin-top:10px; display:none;">
+                                <img id="proofPreviewImg" src="" alt="Preview"
+                                     style="max-width:100%; max-height:200px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            </div>
+                            <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+                                Format: JPG, PNG, WEBP, GIF. Wajib diupload untuk menyelesaikan pesanan.
+                            </p>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" style="width:100%;"
+                                onclick="return validateProofPhoto()">
+                            <i class='bx bx-check-circle'></i> Selesaikan Pesanan
+                        </button>
+                    </form>
+                    <?php else: ?>
+                    <form method="POST" style="margin-bottom:8px;">
+                        <input type="hidden" name="update_status" value="1">
+                        <input type="hidden" name="new_status" value="<?= $status ?>">
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <i class='bx bx-right-arrow-alt'></i>
+                            <?= $label ?>
+                        </button>
+                    </form>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             <?php else: ?>
                 <p style="text-align:center; color:var(--success); font-size:14px; padding:10px;">
@@ -262,3 +361,34 @@ $profit = $order['price'] - $order['worker_commission'];
         </div>
     </div>
 </div>
+
+<script>
+// Preview uploaded proof photo
+const proofInput = document.getElementById('proofPhotoInput');
+const proofPreview = document.getElementById('proofPreview');
+const proofPreviewImg = document.getElementById('proofPreviewImg');
+
+if (proofInput) {
+    proofInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                proofPreviewImg.src = e.target.result;
+                proofPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            proofPreview.style.display = 'none';
+        }
+    });
+}
+
+function validateProofPhoto() {
+    const input = document.getElementById('proofPhotoInput');
+    if (!input || !input.files || input.files.length === 0) {
+        alert('Wajib upload foto bukti/testimoni untuk menyelesaikan pesanan!');
+        return false;
+    }
+    return confirm('Yakin pesanan sudah selesai? Pastikan foto bukti sudah benar.');
+}
+</script>

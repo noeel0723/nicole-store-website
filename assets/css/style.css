@@ -1739,3 +1739,231 @@ textarea.form-control {
         font-size: 16px;
     }
 }
+
+/* ============================================
+   Customer Page - Redesigned
+   ============================================ */
+.customer-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.customer-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.customer-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-light);
+}
+
+.cs-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.cs-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.cs-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+
+.cs-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cs-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+/* Customer Toolbar */
+.customer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.customer-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+.filter-tab.active {
+    background: var(--primary);
+    color: #F7F5F1;
+    border-color: var(--primary);
+}
+
+.filter-tab.active .ft-count {
+    background: rgba(255,255,255,0.2);
+    color: #F7F5F1;
+}
+
+.ft-count {
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 99px;
+}
+
+/* Customer Cell (Avatar + Info) */
+.customer-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+}
+
+.customer-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.customer-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color 0.2s;
+}
+
+.customer-name:hover {
+    color: var(--primary-light);
+}
+
+.customer-join {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Game ID Badge */
+.game-id-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+}
+
+/* Proof Upload Section */
+.proof-upload-section input[type="file"] {
+    padding: 8px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.proof-upload-section input[type="file"]:hover {
+    border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .customer-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .customer-toolbar-right {
+        width: 100%;
+    }
+
+    .customer-toolbar-right .search-box {
+        width: 100%;
+    }
+}
