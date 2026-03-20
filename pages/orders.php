@@ -83,7 +83,6 @@ $allOrders = $stmt->fetchAll();
     </a>
 </div>
 
-<!-- ============= TABLE VIEW ============= -->
 <div class="filter-bar">
     <div class="search-box">
         <i class='bx bx-search'></i>

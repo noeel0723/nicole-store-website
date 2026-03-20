@@ -41,36 +41,85 @@ $workers = $db->query("
     ORDER BY active_orders ASC
 ")->fetchAll();
 
+// ======= Pesanan Bulan Ini (total) =======
+$totalOrdersThisMonth = $db->query("SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())")->fetchColumn();
 ?>
 
-<!-- Stat Cards -->
-<div class="stats-grid">
-    <div class="stat-card primary">
-        <div class="stat-icon"><i class='bx bxs-receipt'></i></div>
-        <div class="stat-value"><?= $activeOrders ?></div>
-        <div class="stat-label">Pesanan Aktif</div>
-    </div>
-    <div class="stat-card success">
-        <div class="stat-icon"><i class='bx bxs-check-circle'></i></div>
-        <div class="stat-value"><?= $completedThisMonth ?></div>
-        <div class="stat-label">Selesai Bulan Ini</div>
-    </div>
-    <div class="stat-card warning">
-        <div class="stat-icon"><i class='bx bxs-wallet'></i></div>
-        <div class="stat-value"><?= formatRupiah($revenueThisMonth) ?></div>
-        <div class="stat-label">Pendapatan Bulan Ini</div>
-    </div>
-    <div class="stat-card info">
-        <div class="stat-icon"><i class='bx bxs-bar-chart-alt-2'></i></div>
-        <div class="stat-value"><?= formatRupiah($profitThisMonth) ?></div>
-        <div class="stat-label">Profit Bersih</div>
-    </div>
-</div>
+<!-- Dashboard Shell -->
+<div class="dashboard-shell">
 
-<!-- Main Grid -->
-<div class="grid-3">
-    <!-- Left: Critical Orders -->
-    <div>
+    <!-- Top Grid: Main Account + Focus -->
+    <div class="dashboard-top-grid">
+        <!-- Main Account Card -->
+        <div class="card dashboard-balance-card">
+            <div class="db-meta">Laporan Bulanan</div>
+            <div class="db-title"><?= APP_NAME ?> — <?= date('F Y') ?></div>
+            <div class="db-balance-row">
+                <div>
+                    <div class="db-balance-label">Pendapatan Bulan Ini</div>
+                    <div class="db-balance-value"><?= formatRupiah($revenueThisMonth) ?></div>
+                </div>
+                <div>
+                    <div class="db-balance-label">Profit Bersih</div>
+                    <div class="db-balance-profit"><?= formatRupiah($profitThisMonth) ?></div>
+                </div>
+            </div>
+            <div class="db-actions">
+                <a href="index.php?page=orders" class="btn btn-primary btn-sm">
+                    <i class='bx bx-receipt'></i> Lihat Pesanan
+                </a>
+                <a href="index.php?page=workers" class="btn btn-outline btn-sm">
+                    <i class='bx bx-group'></i> Kelola Worker
+                </a>
+            </div>
+        </div>
+
+        <!-- Focus Card -->
+        <div class="card dashboard-focus-card">
+            <h3><i class='bx bx-target-lock'></i> Fokus Hari Ini</h3>
+            <p>Pantau metrik penting untuk memastikan operasional berjalan lancar.</p>
+            <div class="focus-list">
+                <div class="focus-item">
+                    <span>Pesanan Aktif</span>
+                    <strong><?= $activeOrders ?></strong>
+                </div>
+                <div class="focus-item">
+                    <span>Selesai Bulan Ini</span>
+                    <strong><?= $completedThisMonth ?></strong>
+                </div>
+                <div class="focus-item">
+                    <span>Total Pesanan Bulan Ini</span>
+                    <strong><?= $totalOrdersThisMonth ?></strong>
+                </div>
+            </div>
+            <a href="index.php?page=order_form" class="btn btn-outline btn-sm" style="border-color:rgba(255,255,255,0.3); color:#F6F4EF;">
+                <i class='bx bx-plus'></i> Buat Pesanan Baru
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="dashboard-kpi-grid">
+        <div class="kpi-box">
+            <small>Pesanan Aktif</small>
+            <strong><?= $activeOrders ?></strong>
+        </div>
+        <div class="kpi-box">
+            <small>Selesai Bulan Ini</small>
+            <strong><?= $completedThisMonth ?></strong>
+        </div>
+        <div class="kpi-box">
+            <small>Pendapatan</small>
+            <strong><?= formatRupiah($revenueThisMonth) ?></strong>
+        </div>
+        <div class="kpi-box">
+            <small>Profit Bersih</small>
+            <strong><?= formatRupiah($profitThisMonth) ?></strong>
+        </div>
+    </div>
+
+    <!-- Main Grid: Critical Orders + Worker Radar -->
+    <div class="dashboard-main-grid">
         <!-- Critical Orders -->
         <div class="card">
             <div class="card-header">
@@ -128,10 +177,8 @@ $workers = $db->query("
                 </div>
             <?php endif; ?>
         </div>
-    </div>
 
-    <!-- Right: Worker Radar -->
-    <div>
+        <!-- Worker Radar -->
         <div class="card">
             <div class="card-header">
                 <h3><i class='bx bx-radar' style="color: var(--accent);"></i> Radar Worker</h3>

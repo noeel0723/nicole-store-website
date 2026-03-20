@@ -39,19 +39,24 @@ foreach (MLBB_RANKS as $rank) {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customerId = (int)$_POST['customer_id'];
-    $workerId = !empty($_POST['worker_id']) ? (int)$_POST['worker_id'] : null;
+    $isAdminSendiri = ($_POST['worker_id'] ?? '') === 'admin';
+    $workerId = (!empty($_POST['worker_id']) && !$isAdminSendiri) ? (int)$_POST['worker_id'] : null;
     $rankFrom = trim($_POST['rank_from']);
     $rankTo = trim($_POST['rank_to']);
     $requestHero = trim($_POST['request_hero'] ?? '');
     $requestRole = trim($_POST['request_role'] ?? '');
     $specialRequest = trim($_POST['special_request'] ?? '');
     $price = (float)str_replace(['.', ','], ['', '.'], $_POST['price']);
-    $workerCommission = round($price * 0.7, 2);
+    $workerCommission = $isAdminSendiri ? 0 : round($price * 0.7, 2);
     $paymentStatus = $_POST['payment_status'];
     $deadline = !empty($_POST['deadline']) ? $_POST['deadline'] : null;
 
     // Determine status
-    $status = $workerId ? 'in_progress' : 'unassigned';
+    if ($isAdminSendiri) {
+        $status = 'in_progress';
+    } else {
+        $status = $workerId ? 'in_progress' : 'unassigned';
+    }
     if ($isEdit) {
         $status = $_POST['status'] ?? $order['status'];
     }
@@ -232,8 +237,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-row">
             <div class="form-group">
                 <label>Pilih Worker</label>
-                <select name="worker_id" class="form-control">
+                <select name="worker_id" id="workerSelect" class="form-control">
                     <option value="">Belum ditugaskan</option>
+                    <option value="admin" <?= ($isEdit && !$order['worker_id'] && $order['worker_commission'] == 0 && $order['status'] !== 'unassigned') ? 'selected' : '' ?>>👤 Admin Sendiri (Tanpa Komisi)</option>
                     <?php foreach ($workers as $w): ?>
                     <option value="<?= $w['id'] ?>" <?= ($isEdit && $order['worker_id'] == $w['id']) ? 'selected' : '' ?>>
                         <?= sanitize($w['name']) ?> (<?= sanitize($w['rank_info'] ?? '-') ?>)
@@ -319,6 +325,7 @@ if (searchInput) {
 // Auto-calculate worker commission = 70% of total price
 const orderPriceInput = document.getElementById('orderPrice');
 const workerCommissionInput = document.getElementById('workerCommission');
+const workerSelect = document.getElementById('workerSelect');
 
 function parseToNumber(value) {
     if (!value) return 0;
@@ -327,12 +334,22 @@ function parseToNumber(value) {
     return Number.isFinite(num) ? num : 0;
 }
 
-if (orderPriceInput && workerCommissionInput) {
-    const updateCommission = () => {
-        const price = parseToNumber(orderPriceInput.value);
+function updateCommission() {
+    if (!orderPriceInput || !workerCommissionInput) return;
+    const isAdmin = workerSelect && workerSelect.value === 'admin';
+    const price = parseToNumber(orderPriceInput.value);
+    if (isAdmin) {
+        workerCommissionInput.value = 0;
+    } else {
         workerCommissionInput.value = Math.round(price * 0.7);
-    };
+    }
+}
+
+if (orderPriceInput && workerCommissionInput) {
     orderPriceInput.addEventListener('input', updateCommission);
+    if (workerSelect) {
+        workerSelect.addEventListener('change', updateCommission);
+    }
     updateCommission();
 }
 </script>

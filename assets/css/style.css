@@ -419,6 +419,151 @@ img {
 }
 
 /* ============================================
+   Dashboard Modern Layout
+   ============================================ */
+.dashboard-shell {
+    display: grid;
+    gap: 18px;
+}
+
+.dashboard-top-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 16px;
+}
+
+.dashboard-balance-card {
+    background: linear-gradient(145deg, #FFFEFC 0%, #F0ECE4 100%);
+}
+
+.db-meta {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.db-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 18px;
+}
+
+.db-balance-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.db-balance-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.db-balance-value,
+.db-balance-profit {
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.db-balance-value {
+    color: var(--primary-dark);
+}
+
+.db-balance-profit {
+    color: var(--success);
+}
+
+.db-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-focus-card {
+    background: linear-gradient(150deg, var(--primary) 0%, #3F5A54 100%);
+    color: #F6F4EF;
+}
+
+.dashboard-focus-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.dashboard-focus-card p {
+    color: rgba(246, 244, 239, 0.84);
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.focus-list {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.focus-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 9px 10px;
+}
+
+.focus-item span {
+    font-size: 12px;
+    color: rgba(246, 244, 239, 0.85);
+}
+
+.focus-item strong {
+    font-size: 18px;
+    color: #FFFFFF;
+}
+
+.dashboard-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.kpi-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+}
+
+.kpi-box small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
+}
+
+.kpi-box strong {
+    color: var(--primary);
+    font-size: 21px;
+    line-height: 1.2;
+}
+
+.dashboard-main-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+}
+
+/* ============================================
    Stat Cards (Dashboard)
    ============================================ */
 .stats-grid {
@@ -538,32 +683,23 @@ table tbody tr:last-child td {
 
 .workers-table {
     table-layout: auto;
-    min-width: 1280px;
+    min-width: 700px;
 }
 
 .workers-table th,
 .workers-table td {
-    padding: 12px 10px;
+    padding: 14px 12px;
     vertical-align: middle;
 }
 
 .workers-table th:nth-child(1),
 .workers-table td:nth-child(1) {
-    width: 220px;
+    min-width: 200px;
 }
 
 .workers-table th:nth-child(3),
 .workers-table td:nth-child(3) {
-    width: 170px;
-}
-
-.workers-table th:nth-child(4),
-.workers-table td:nth-child(4),
-.workers-table th:nth-child(5),
-.workers-table td:nth-child(5),
-.workers-table th:nth-child(6),
-.workers-table td:nth-child(6) {
-    width: 125px;
+    min-width: 160px;
 }
 
 .workers-table thead th {
@@ -578,15 +714,13 @@ table tbody tr:last-child td {
     text-align: left;
 }
 
-.workers-table td:nth-child(2),
+.workers-table td:nth-child(2) {
+    text-align: left;
+}
+
 .workers-table td:nth-child(4),
 .workers-table td:nth-child(5),
-.workers-table td:nth-child(6),
-.workers-table td:nth-child(7),
-.workers-table td:nth-child(8),
-.workers-table td:nth-child(9),
-.workers-table td:nth-child(10),
-.workers-table td:nth-child(11) {
+.workers-table td:nth-child(6) {
     text-align: center;
 }
 
@@ -1467,6 +1601,16 @@ textarea.form-control {
    Responsive: Tablet
    ============================================ */
 @media (max-width: 1024px) {
+    .dashboard-top-grid,
+    .dashboard-main-grid,
+    .dashboard-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .db-balance-row {
+        grid-template-columns: 1fr;
+    }
+
     .kanban-board {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1540,6 +1684,15 @@ textarea.form-control {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 12px;
+    }
+
+    .db-title {
+        font-size: 19px;
+    }
+
+    .db-balance-value,
+    .db-balance-profit {
+        font-size: 24px;
     }
 
     .kanban-board {

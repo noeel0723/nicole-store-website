@@ -69,11 +69,6 @@ $workers = $stmt->fetchAll();
                     <th>Nama Worker</th>
                     <th>Highest Rank</th>
                     <th>3 Role Utama</th>
-                    <th>Hari Ini</th>
-                    <th>7 Hari</th>
-                    <th>Bulan Ini</th>
-                    <th>Pesanan Aktif</th>
-                    <th>Selesai</th>
                     <th>Saldo Komisi</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -81,7 +76,7 @@ $workers = $stmt->fetchAll();
             </thead>
             <tbody>
                 <?php if (empty($workers)): ?>
-                <tr><td colspan="11"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Worker</h3><p>Rekrut worker pertama Anda.</p></div></td></tr>
+                <tr><td colspan="6"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Worker</h3><p>Rekrut worker pertama Anda.</p></div></td></tr>
                 <?php else: ?>
                 <?php foreach ($workers as $w): ?>
                 <?php $pendingCommission = $w['total_earned'] - $w['total_paid']; ?>
@@ -99,11 +94,6 @@ $workers = $stmt->fetchAll();
                     </td>
                     <td style="font-weight:600; font-size:13px;"><?= sanitize($w['rank_info'] ?? '-') ?></td>
                     <td class="worker-specialization" style="font-size:13px;"><?= sanitize($w['roles'] ?? '-') ?></td>
-                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_today']) ?></td>
-                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_week']) ?></td>
-                    <td style="font-size:13px; font-weight:600;"><?= formatRupiah($w['earned_month']) ?></td>
-                    <td style="font-weight:700; text-align:center;"><?= $w['active_orders'] ?></td>
-                    <td style="text-align:center; color:var(--text-muted);"><?= $w['completed_orders'] ?></td>
                     <td>
                         <?php if ($pendingCommission > 0): ?>
                             <span style="color:var(--warning); font-weight:700;"><?= formatRupiah($pendingCommission) ?></span>
