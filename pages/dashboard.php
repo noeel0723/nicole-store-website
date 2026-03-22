@@ -92,7 +92,7 @@ $totalOrdersThisMonth = $db->query("SELECT COUNT(*) FROM orders WHERE MONTH(crea
                     <strong><?= $totalOrdersThisMonth ?></strong>
                 </div>
             </div>
-            <a href="index.php?page=order_form" class="btn btn-outline btn-sm" style="border-color:rgba(255,255,255,0.3); color:#F6F4EF;">
+            <a href="index.php?page=order_form" class="btn btn-outline btn-sm" style="border-color:rgba(255,255,255,0.3); color:#FBF7F4;">
                 <i class='bx bx-plus'></i> Buat Pesanan Baru
             </a>
         </div>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Order Detail
+ * Order Detail — 2-Column Panel Layout
  */
 $db = getDB();
 
@@ -94,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             $db->prepare("INSERT INTO order_logs (order_id, message) VALUES (?, ?)")->execute([$orderId, '✅ Pesanan diselesaikan.']);
 
         } else {
-            // Non-completed status update (no photo required)
             $completedAt = null;
             $stmt = $db->prepare("UPDATE orders SET status = ?, completed_at = COALESCE(?, completed_at), updated_at = NOW() WHERE id = ?");
             $stmt->execute([$newStatus, $completedAt, $orderId]);
@@ -107,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 
 // Profit
 $profit = $order['price'] - $order['worker_commission'];
+$isCompleted = $order['status'] === 'completed';
 
 // Joki type label
 $jokiTypeLabels = [
@@ -114,259 +114,308 @@ $jokiTypeLabels = [
     'joki_login' => 'Joki Login',
 ];
 $jokiTypeDisplay = $jokiTypeLabels[$order['joki_type'] ?? ''] ?? null;
+
+// Contact parsing
+$customerContact = parseCustomerContact($order['customer_phone'] ?? '');
 ?>
 
+<!-- Breadcrumb + Actions -->
 <div class="page-header">
     <div>
-        <h2>Pesanan #<?= $order['id'] ?></h2>
-        <p>Dibuat: <?= date('d M Y, H:i', strtotime($order['created_at'])) ?></p>
+        <a href="index.php?page=orders" style="font-size:13px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; margin-bottom:4px;">
+            <i class='bx bx-arrow-back'></i> Kembali ke Pesanan
+        </a>
+        <h2>Pesanan #<?= $order['id'] ?> <?= statusLabel($order['status']) ?></h2>
     </div>
     <div class="btn-group">
+        <?php if (!$isCompleted): ?>
         <a href="index.php?page=order_form&id=<?= $order['id'] ?>" class="btn btn-outline">
             <i class='bx bx-edit'></i> Edit
         </a>
-        <a href="index.php?page=orders" class="btn btn-outline">
-            <i class='bx bx-arrow-back'></i> Kembali
-        </a>
+        <?php endif; ?>
     </div>
 </div>
 
-<div class="detail-grid">
-    <!-- Left: Details -->
-    <div>
-        <!-- Order Info -->
-        <div class="card" style="margin-bottom:20px;">
-            <div class="card-header">
-                <h3><i class='bx bx-info-circle' style="color:var(--primary-light)"></i> Informasi Pesanan</h3>
-                <?= statusLabel($order['status']) ?>
-            </div>
+<!-- 2-Column Detail Layout -->
+<div class="od-grid">
+    <!-- LEFT: Order Info Panel -->
+    <div class="od-panel">
+        <div class="od-panel-header">
+            <h3><i class='bx bx-package'></i> Detail Pesanan</h3>
+        </div>
 
-            <div class="detail-row">
-                <span class="label">Pelanggan</span>
-                <span class="value">
-                    <a href="index.php?page=customer_detail&id=<?= $order['customer_id'] ?>" style="color:var(--primary-light);">
-                        <?= sanitize($order['customer_name']) ?>
-                    </a>
-                </span>
-            </div>
-            <div class="detail-row">
-                <span class="label">ID Game</span>
-                <span class="value"><?= sanitize($order['customer_game_id'] ?? '-') ?></span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Rank</span>
-                <span class="value"><?= sanitize($order['rank_from']) ?> → <?= sanitize($order['rank_to']) ?></span>
-            </div>
-            <?php if ($jokiTypeDisplay): ?>
-            <div class="detail-row">
-                <span class="label">Tipe Joki</span>
-                <span class="value">
-                    <span class="badge <?= $order['joki_type'] === 'joki_gendong' ? 'badge-info' : 'badge-warning' ?>">
-                        <i class='bx <?= $order['joki_type'] === 'joki_gendong' ? 'bx-group' : 'bx-log-in' ?>' style="margin-right:4px;"></i>
-                        <?= $jokiTypeDisplay ?>
+        <div class="od-section">
+            <div class="od-row-2col">
+                <div>
+                    <span class="od-label">PELANGGAN</span>
+                    <span class="od-value">
+                        <a href="index.php?page=customer_detail&id=<?= $order['customer_id'] ?>" style="color:var(--mocha); font-weight:600;">
+                            <?= sanitize($order['customer_name']) ?>
+                        </a>
                     </span>
-                </span>
+                </div>
+                <div>
+                    <span class="od-label">TANGGAL DIBUAT</span>
+                    <span class="od-value"><?= date('d M Y, H:i', strtotime($order['created_at'])) ?></span>
+                </div>
             </div>
-            <?php endif; ?>
-            <?php if ($order['request_hero']): ?>
-            <div class="detail-row">
-                <span class="label">Hero</span>
-                <span class="value"><?= sanitize($order['request_hero']) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if ($order['request_role']): ?>
-            <div class="detail-row">
-                <span class="label">Role</span>
-                <span class="value"><?= sanitize($order['request_role']) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if ($order['special_request']): ?>
-            <div class="detail-row">
-                <span class="label">Request Khusus</span>
-                <span class="value" style="max-width:300px; text-align:right;"><?= sanitize($order['special_request']) ?></span>
-            </div>
-            <?php endif; ?>
-            <div class="detail-row">
-                <span class="label">Deadline</span>
-                <span class="value"><?= $order['deadline'] ? date('d M Y', strtotime($order['deadline'])) : '-' ?></span>
+            <div class="od-row-2col">
+                <div>
+                    <span class="od-label">ID GAME</span>
+                    <span class="od-value"><?= sanitize($order['customer_game_id'] ?? '-') ?></span>
+                </div>
+                <div>
+                    <span class="od-label">DEADLINE</span>
+                    <span class="od-value"><?= $order['deadline'] ? date('d M Y', strtotime($order['deadline'])) : '-' ?></span>
+                </div>
             </div>
         </div>
 
-        <!-- Proof Photo (if completed) -->
-        <?php if ($order['proof_photo']): ?>
-        <div class="card" style="margin-bottom:20px;">
-            <div class="card-header">
-                <h3><i class='bx bx-camera' style="color:var(--success)"></i> Bukti / Testimoni</h3>
+        <div class="od-divider"></div>
+
+        <div class="od-section">
+            <div class="od-row-2col">
+                <div>
+                    <span class="od-label">RANK AWAL</span>
+                    <span class="od-value"><?= sanitize($order['rank_from']) ?></span>
+                </div>
+                <div>
+                    <span class="od-label">RANK TUJUAN</span>
+                    <span class="od-value"><?= sanitize($order['rank_to']) ?></span>
+                </div>
             </div>
-            <div style="text-align:center;">
-                <img src="<?= sanitize($order['proof_photo']) ?>" alt="Bukti Testimoni"
-                     style="max-width:100%; max-height:400px; border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;"
-                     onclick="window.open(this.src, '_blank')">
-                <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">
-                    <i class='bx bx-check-circle' style="color:var(--success);"></i>
-                    Foto bukti telah diupload
+            <?php if ($jokiTypeDisplay): ?>
+            <div class="od-row-2col">
+                <div>
+                    <span class="od-label">TIPE JOKI</span>
+                    <span class="od-value">
+                        <span class="badge <?= $order['joki_type'] === 'joki_gendong' ? 'badge-info' : 'badge-warning' ?>">
+                            <?= $jokiTypeDisplay ?>
+                        </span>
+                    </span>
+                </div>
+                <div></div>
+            </div>
+            <?php endif; ?>
+            <?php if ($order['request_hero'] || $order['request_role']): ?>
+            <div class="od-row-2col">
+                <?php if ($order['request_hero']): ?>
+                <div>
+                    <span class="od-label">REQUEST HERO</span>
+                    <span class="od-value"><?= sanitize($order['request_hero']) ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if ($order['request_role']): ?>
+                <div>
+                    <span class="od-label">REQUEST ROLE</span>
+                    <span class="od-value"><?= sanitize($order['request_role']) ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($order['special_request']): ?>
+        <div class="od-divider"></div>
+        <div class="od-section">
+            <span class="od-label">CATATAN KHUSUS</span>
+            <p style="margin-top:6px; color:var(--text-secondary); font-size:14px; line-height:1.7;"><?= sanitize($order['special_request']) ?></p>
+        </div>
+        <?php endif; ?>
+
+        <!-- Proof Photo -->
+        <?php if ($order['proof_photo']): ?>
+        <div class="od-divider"></div>
+        <div class="od-section">
+            <span class="od-label">BUKTI / TESTIMONI</span>
+            <div style="margin-top:8px; text-align:center;">
+                <img src="<?= sanitize($order['proof_photo']) ?>" alt="Bukti"
+                     class="od-proof-thumb"
+                     onclick="openLightbox(this.src)">
+                <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+                    <i class='bx bx-check-circle' style="color:var(--success);"></i> Klik foto untuk memperbesar
                 </p>
             </div>
         </div>
         <?php endif; ?>
-
-        <!-- Financial -->
-        <div class="card" style="margin-bottom:20px;">
-            <div class="card-header">
-                <h3><i class='bx bx-money' style="color:var(--warning)"></i> Keuangan</h3>
-                <?= paymentLabel($order['payment_status']) ?>
-            </div>
-            <div class="detail-row">
-                <span class="label">Total Harga</span>
-                <span class="value" style="color:var(--success); font-size:18px;"><?= formatRupiah($order['price']) ?></span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Komisi Worker</span>
-                <span class="value" style="color:var(--warning);"><?= formatRupiah($order['worker_commission']) ?></span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Profit Bersih</span>
-                <span class="value" style="color:var(--accent); font-size:18px;"><?= formatRupiah($profit) ?></span>
-            </div>
-        </div>
-
-        <!-- Progress Log -->
-        <div class="card">
-            <div class="card-header">
-                <h3><i class='bx bx-history' style="color:var(--accent)"></i> Log Progres</h3>
-            </div>
-
-            <!-- Add log form -->
-            <form method="POST" style="margin-bottom:20px;">
-                <div style="display:flex; gap:10px;">
-                    <input type="text" name="log_message" class="form-control" placeholder="Tambah catatan progres..." required style="flex:1;">
-                    <button type="submit" name="add_log" class="btn btn-primary btn-sm">
-                        <i class='bx bx-plus'></i> Tambah
-                    </button>
-                </div>
-            </form>
-
-            <?php if (empty($logs)): ?>
-                <div class="empty-state" style="padding:30px;">
-                    <i class='bx bx-note'></i>
-                    <p>Belum ada catatan progres.</p>
-                </div>
-            <?php else: ?>
-                <div class="timeline">
-                    <?php foreach ($logs as $log): ?>
-                    <div class="timeline-item">
-                        <div class="tl-time"><?= date('d M Y, H:i', strtotime($log['created_at'])) ?></div>
-                        <div class="tl-message"><?= sanitize($log['message']) ?></div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
     </div>
 
-    <!-- Right: Worker + Actions -->
+    <!-- RIGHT: Payment + Worker + Actions -->
     <div>
-        <!-- Worker Info -->
-        <div class="card" style="margin-bottom:20px;">
-            <div class="card-header">
-                <h3><i class='bx bx-user' style="color:var(--info)"></i> Worker</h3>
+        <!-- Payment Card -->
+        <div class="od-panel" style="margin-bottom:16px;">
+            <div class="od-panel-header">
+                <h3><i class='bx bx-credit-card'></i> Pembayaran</h3>
+                <?= paymentLabel($order['payment_status']) ?>
+            </div>
+            <div class="od-finance-grid">
+                <div>
+                    <span class="od-label">TOTAL HARGA</span>
+                    <span class="od-finance-value"><?= formatRupiah($order['price']) ?></span>
+                </div>
+                <div>
+                    <span class="od-label">KOMISI WORKER</span>
+                    <span class="od-finance-value" style="color:var(--danger);">-<?= formatRupiah($order['worker_commission']) ?></span>
+                </div>
+                <div>
+                    <span class="od-label">PROFIT BERSIH</span>
+                    <span class="od-finance-value" style="color:var(--success); font-weight:800;"><?= formatRupiah($profit) ?></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Worker Card -->
+        <div class="od-panel" style="margin-bottom:16px;">
+            <div class="od-panel-header">
+                <h3><i class='bx bx-user'></i> Worker</h3>
             </div>
             <?php if ($order['worker_name']): ?>
-                <div style="text-align:center; padding:10px 0;">
-                    <div style="width:56px; height:56px; background:linear-gradient(135deg, var(--primary), var(--accent)); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:white; margin-bottom:12px;">
-                        <?= strtoupper(substr($order['worker_name'], 0, 1)) ?>
-                    </div>
-                    <h3 style="font-size:16px; margin-bottom:4px;"><?= sanitize($order['worker_name']) ?></h3>
-                    <p style="font-size:13px; color:var(--text-muted);"><?= sanitize($order['worker_rank'] ?? '-') ?></p>
+            <div style="display:flex; align-items:center; gap:14px; padding:4px 0;">
+                <div style="width:46px; height:46px; background:linear-gradient(135deg, var(--mocha), var(--taupe)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:white; flex-shrink:0;">
+                    <?= strtoupper(substr($order['worker_name'], 0, 1)) ?>
+                </div>
+                <div style="flex:1;">
+                    <strong style="font-size:14px;"><?= sanitize($order['worker_name']) ?></strong>
+                    <div style="font-size:12px; color:var(--text-muted);"><?= sanitize($order['worker_rank'] ?? '-') ?></div>
                     <?php if ($order['worker_phone']): ?>
-                    <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">
-                        <i class='bx bx-phone'></i> <?= sanitize($order['worker_phone']) ?>
-                    </p>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                        <i class='bx bx-phone' style="font-size:12px;"></i> <?= sanitize($order['worker_phone']) ?>
+                    </div>
                     <?php endif; ?>
-                    <a href="index.php?page=worker_detail&id=<?= $order['worker_id'] ?>" class="btn btn-sm btn-outline" style="margin-top:12px;">
-                        Lihat Profil
-                    </a>
                 </div>
+                <a href="index.php?page=worker_detail&id=<?= $order['worker_id'] ?>" class="btn btn-sm btn-outline">Profil</a>
+            </div>
             <?php else: ?>
-                <div class="empty-state" style="padding:20px;">
-                    <i class='bx bx-user-x'></i>
-                    <p>Belum ada worker ditugaskan</p>
-                    <a href="index.php?page=order_form&id=<?= $order['id'] ?>" class="btn btn-sm btn-primary" style="margin-top:10px;">
-                        <i class='bx bx-user-plus'></i> Tugaskan Worker
-                    </a>
-                </div>
+            <div class="empty-state" style="padding:20px;">
+                <i class='bx bx-user-x'></i>
+                <p>Belum ada worker</p>
+                <?php if (!$isCompleted): ?>
+                <a href="index.php?page=order_form&id=<?= $order['id'] ?>" class="btn btn-sm btn-primary" style="margin-top:8px;">
+                    <i class='bx bx-user-plus'></i> Tugaskan
+                </a>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
         </div>
 
         <!-- Quick Actions -->
-        <div class="card">
-            <div class="card-header">
-                <h3><i class='bx bx-bolt' style="color:var(--warning)"></i> Aksi Cepat</h3>
+        <?php
+        $nextStatuses = [
+            'unassigned' => ['in_progress' => 'Mulai Kerjakan'],
+            'in_progress' => ['pending_verification' => 'Minta Verifikasi'],
+            'pending_verification' => ['completed' => 'Selesaikan Pesanan', 'in_progress' => 'Kembali ke Progress'],
+            'completed' => []
+        ];
+        $actions = $nextStatuses[$order['status']] ?? [];
+        ?>
+
+        <?php if (!empty($actions)): ?>
+        <div class="od-panel">
+            <div class="od-panel-header">
+                <h3><i class='bx bx-bolt'></i> Aksi Cepat</h3>
             </div>
-
-            <?php
-            $nextStatuses = [
-                'unassigned' => ['in_progress' => 'Mulai Kerjakan'],
-                'in_progress' => ['pending_verification' => 'Minta Verifikasi'],
-                'pending_verification' => ['completed' => 'Selesaikan Pesanan', 'in_progress' => 'Kembali ke Progress'],
-                'completed' => []
-            ];
-            $actions = $nextStatuses[$order['status']] ?? [];
-            ?>
-
-            <?php if (!empty($actions)): ?>
-                <?php foreach ($actions as $status => $label): ?>
-                    <?php if ($status === 'completed'): ?>
-                    <!-- Complete order requires photo proof -->
-                    <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;" id="completeForm">
-                        <input type="hidden" name="update_status" value="1">
-                        <input type="hidden" name="new_status" value="completed">
-
-                        <div class="proof-upload-section" style="margin-bottom:12px;">
-                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">
-                                <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti / Testimoni *
-                            </label>
-                            <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*" capture="environment"
-                                   style="display:none;" required>
-                            <div class="proof-drop-zone" id="proofDropZone">
-                                <div id="proofPlaceholder">
-                                    <i class='bx bx-cloud-upload pdz-icon'></i>
-                                    <p class="pdz-text">Seret gambar ke sini, tempel (Ctrl+V), atau klik untuk pilih</p>
-                                    <p class="pdz-hint">Format: JPG, PNG, WEBP, GIF — Wajib untuk menyelesaikan pesanan</p>
-                                </div>
-                                <div id="proofPreview" style="display:none;">
-                                    <img id="proofPreviewImg" src="" alt="Preview" class="pdz-preview">
-                                    <span class="pdz-change">📷 Klik untuk ganti gambar</span>
-                                </div>
+            <?php foreach ($actions as $status => $label): ?>
+                <?php if ($status === 'completed'): ?>
+                <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;" id="completeForm">
+                    <input type="hidden" name="update_status" value="1">
+                    <input type="hidden" name="new_status" value="completed">
+                    <div class="proof-upload-section" style="margin-bottom:12px;">
+                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                            <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti *
+                        </label>
+                        <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*" capture="environment" style="display:none;" required>
+                        <div class="proof-drop-zone" id="proofDropZone">
+                            <div id="proofPlaceholder">
+                                <i class='bx bx-cloud-upload pdz-icon'></i>
+                                <p class="pdz-text">Seret, tempel (Ctrl+V), atau klik</p>
+                                <p class="pdz-hint">JPG, PNG, WEBP, GIF</p>
+                            </div>
+                            <div id="proofPreview" style="display:none;">
+                                <img id="proofPreviewImg" src="" alt="Preview" class="pdz-preview">
+                                <span class="pdz-change">📷 Ganti gambar</span>
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-success" style="width:100%;"
-                                onclick="return validateProofPhoto()">
-                            <i class='bx bx-check-circle'></i> Selesaikan Pesanan
-                        </button>
-                    </form>
-                    <?php else: ?>
-                    <form method="POST" style="margin-bottom:8px;">
-                        <input type="hidden" name="update_status" value="1">
-                        <input type="hidden" name="new_status" value="<?= $status ?>">
-                        <button type="submit" class="btn btn-primary" style="width:100%;">
-                            <i class='bx bx-right-arrow-alt'></i>
-                            <?= $label ?>
-                        </button>
-                    </form>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p style="text-align:center; color:var(--success); font-size:14px; padding:10px;">
-                    <i class='bx bx-check-circle'></i> Pesanan ini sudah selesai
-                </p>
-            <?php endif; ?>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width:100%;" onclick="return validateProofPhoto()">
+                        <i class='bx bx-check-circle'></i> Selesaikan Pesanan
+                    </button>
+                </form>
+                <?php else: ?>
+                <form method="POST" style="margin-bottom:8px;">
+                    <input type="hidden" name="update_status" value="1">
+                    <input type="hidden" name="new_status" value="<?= $status ?>">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class='bx bx-right-arrow-alt'></i> <?= $label ?>
+                    </button>
+                </form>
+                <?php endif; ?>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
+
+        <?php if ($isCompleted): ?>
+        <div class="od-panel">
+            <p style="text-align:center; color:var(--success); font-size:14px; padding:10px;">
+                <i class='bx bx-check-circle'></i> Pesanan ini sudah selesai
+            </p>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
+<!-- Timeline Log -->
+<div class="od-panel" style="margin-top:20px;">
+    <div class="od-panel-header">
+        <h3><i class='bx bx-history'></i> Log Progres</h3>
+    </div>
+    <?php if (!$isCompleted): ?>
+    <form method="POST" style="margin-bottom:16px;">
+        <div style="display:flex; gap:10px;">
+            <input type="text" name="log_message" class="form-control" placeholder="Tambah catatan progres..." required style="flex:1;">
+            <button type="submit" name="add_log" class="btn btn-primary btn-sm">
+                <i class='bx bx-plus'></i> Tambah
+            </button>
+        </div>
+    </form>
+    <?php endif; ?>
+    <?php if (empty($logs)): ?>
+        <div class="empty-state" style="padding:30px;">
+            <i class='bx bx-note'></i>
+            <p>Belum ada catatan progres.</p>
+        </div>
+    <?php else: ?>
+        <div class="timeline">
+            <?php foreach ($logs as $log): ?>
+            <div class="timeline-item">
+                <div class="tl-time"><?= date('d M Y, H:i', strtotime($log['created_at'])) ?></div>
+                <div class="tl-message"><?= sanitize($log['message']) ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Preview">
+    <span class="lightbox-close">&times;</span>
+</div>
+
 <script>
+// Lightbox
+function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightboxOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+});
+
 // Proof upload: drag-drop, paste, click
 const proofInput = document.getElementById('proofPhotoInput');
 const dropZone = document.getElementById('proofDropZone');
@@ -394,37 +443,16 @@ function setFileInput(file) {
 }
 
 if (dropZone && proofInput) {
-    // Click to open file picker
-    dropZone.addEventListener('click', function() {
-        proofInput.click();
-    });
-
+    dropZone.addEventListener('click', function() { proofInput.click(); });
     proofInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            showImagePreview(this.files[0]);
-        }
+        if (this.files && this.files[0]) showImagePreview(this.files[0]);
     });
-
-    // Drag and drop
-    dropZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-    });
-
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
     dropZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setFileInput(e.dataTransfer.files[0]);
-        }
+        e.preventDefault(); this.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) setFileInput(e.dataTransfer.files[0]);
     });
-
-    // Clipboard paste (Ctrl+V)
     document.addEventListener('paste', function(e) {
         const items = e.clipboardData && e.clipboardData.items;
         if (!items) return;
@@ -443,9 +471,9 @@ if (dropZone && proofInput) {
 
 function validateProofPhoto() {
     if (!proofInput || !proofInput.files || proofInput.files.length === 0) {
-        alert('Wajib upload foto bukti/testimoni untuk menyelesaikan pesanan!\nAnda bisa drag & drop, paste screenshot (Ctrl+V), atau klik area upload.');
+        alert('Wajib upload foto bukti/testimoni!');
         return false;
     }
-    return confirm('Yakin pesanan sudah selesai? Pastikan foto bukti sudah benar.');
+    return confirm('Yakin pesanan sudah selesai?');
 }
 </script>

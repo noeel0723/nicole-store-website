@@ -1,12 +1,11 @@
 <?php
 /**
- * Customers List - Redesigned UI
+ * Customers List - Clean UI
  */
 $db = getDB();
 
 // Handle delete
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    // Check if customer has orders
     $orderCount = $db->prepare("SELECT COUNT(*) FROM orders WHERE customer_id = ?");
     $orderCount->execute([$_GET['delete']]);
     if ($orderCount->fetchColumn() > 0) {
@@ -19,7 +18,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 }
 
 $search = $_GET['search'] ?? '';
-$filter = $_GET['filter'] ?? 'all';
 $where = '';
 $params = [];
 if ($search) {
@@ -29,30 +27,15 @@ if ($search) {
 
 $stmt = $db->prepare("SELECT * FROM customers $where ORDER BY created_at DESC");
 $stmt->execute($params);
-$allCustomers = $stmt->fetchAll();
+$customers = $stmt->fetchAll();
 
-// Calculate stats
-$totalCustomers = count($allCustomers);
-$vipCustomers = array_filter($allCustomers, fn($c) => $c['total_orders'] >= 5);
-$regularCustomers = array_filter($allCustomers, fn($c) => $c['total_orders'] < 5);
-$newThisMonth = array_filter($allCustomers, fn($c) => date('Y-m', strtotime($c['created_at'])) === date('Y-m'));
-$activeCustomers = array_filter($allCustomers, fn($c) => $c['total_orders'] > 0);
+$totalCustomers = count($customers);
+$activeCustomers = array_filter($customers, fn($c) => $c['total_orders'] > 0);
+$newThisMonth = array_filter($customers, fn($c) => date('Y-m', strtotime($c['created_at'])) === date('Y-m'));
 
-// Apply filter
-if ($filter === 'vip') {
-    $customers = $vipCustomers;
-} elseif ($filter === 'regular') {
-    $customers = array_filter($allCustomers, fn($c) => $c['total_orders'] >= 1 && $c['total_orders'] < 5);
-} elseif ($filter === 'inactive') {
-    $customers = array_filter($allCustomers, fn($c) => $c['total_orders'] == 0);
-} else {
-    $customers = $allCustomers;
-}
-
-// Avatar colors
 $avatarColors = [
-    '#344945', '#4F6963', '#65848F', '#8C6153', '#9E9A62',
-    '#6B7B76', '#5A7A6D', '#7A6B5A', '#6A5E7A', '#5E7A6A'
+    '#685D54', '#7D7168', '#A39382', '#6889A0', '#5B8C5A',
+    '#8B7BA0', '#C0A062', '#B05A4A', '#4A4039', '#6A5E7A'
 ];
 ?>
 
@@ -64,7 +47,7 @@ $avatarColors = [
             <span class="cs-value"><?= $totalCustomers ?></span>
             <span class="cs-meta"><i class='bx bx-trending-up'></i> Semua pelanggan terdaftar</span>
         </div>
-        <div class="cs-icon" style="background:rgba(52,73,69,0.12); color:var(--primary);">
+        <div class="cs-icon" style="background:rgba(104,93,84,0.12); color:var(--primary);">
             <i class='bx bxs-group'></i>
         </div>
     </div>
@@ -74,7 +57,7 @@ $avatarColors = [
             <span class="cs-value"><?= count($activeCustomers) ?></span>
             <span class="cs-meta"><i class='bx bx-check-circle'></i> Pernah order</span>
         </div>
-        <div class="cs-icon" style="background:rgba(101,132,143,0.16); color:var(--info);">
+        <div class="cs-icon" style="background:rgba(104,137,160,0.14); color:var(--info);">
             <i class='bx bxs-bolt'></i>
         </div>
     </div>
@@ -84,40 +67,23 @@ $avatarColors = [
             <span class="cs-value"><?= count($newThisMonth) ?></span>
             <span class="cs-meta"><i class='bx bx-calendar'></i> <?= date('F Y') ?></span>
         </div>
-        <div class="cs-icon" style="background:rgba(79,111,102,0.14); color:var(--success);">
+        <div class="cs-icon" style="background:rgba(91,140,90,0.14); color:var(--success);">
             <i class='bx bxs-user-plus'></i>
         </div>
     </div>
 </div>
 
-<!-- Filter Tabs + Search -->
+<!-- Toolbar: Search + Add Button -->
 <div class="customer-toolbar">
-    <div class="filter-tabs">
-        <a href="index.php?page=customers&filter=all<?= $search ? '&search=' . urlencode($search) : '' ?>"
-           class="filter-tab <?= $filter === 'all' ? 'active' : '' ?>">
-            All Customers <span class="ft-count"><?= $totalCustomers ?></span>
-        </a>
-        <a href="index.php?page=customers&filter=regular<?= $search ? '&search=' . urlencode($search) : '' ?>"
-           class="filter-tab <?= $filter === 'regular' ? 'active' : '' ?>">
-            Regular
-        </a>
-        <a href="index.php?page=customers&filter=vip<?= $search ? '&search=' . urlencode($search) : '' ?>"
-           class="filter-tab <?= $filter === 'vip' ? 'active' : '' ?>">
-            VIP Member <span class="ft-count"><?= count($vipCustomers) ?></span>
-        </a>
-        <a href="index.php?page=customers&filter=inactive<?= $search ? '&search=' . urlencode($search) : '' ?>"
-           class="filter-tab <?= $filter === 'inactive' ? 'active' : '' ?>">
-            Inactive
-        </a>
+    <div class="search-box" style="min-width:220px; flex:1;">
+        <i class='bx bx-search'></i>
+        <input type="text" placeholder="Cari pelanggan..."
+               value="<?= sanitize($search) ?>"
+               onkeydown="if(event.key==='Enter') location.href='index.php?page=customers&search='+this.value">
     </div>
-    <div class="customer-toolbar-right">
-        <div class="search-box" style="min-width:220px;">
-            <i class='bx bx-search'></i>
-            <input type="text" placeholder="Cari pelanggan..."
-                   value="<?= sanitize($search) ?>"
-                   onkeydown="if(event.key==='Enter') location.href='index.php?page=customers&filter=<?= $filter ?>&search='+this.value">
-        </div>
-    </div>
+    <a href="index.php?page=customer_form" class="btn btn-primary">
+        <i class='bx bx-plus'></i> Tambah Pelanggan
+    </a>
 </div>
 
 <!-- Customer Table -->
@@ -131,13 +97,12 @@ $avatarColors = [
                     <th>Kontak</th>
                     <th>Total Orders</th>
                     <th>Total Spent</th>
-                    <th>Status</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($customers)): ?>
-                <tr><td colspan="7"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Pelanggan</h3><p>Tambahkan pelanggan pertama.</p></div></td></tr>
+                <tr><td colspan="6"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Pelanggan</h3><p>Tambahkan pelanggan pertama.</p></div></td></tr>
                 <?php else: ?>
                 <?php foreach ($customers as $i => $c):
                     $initials = '';
@@ -197,18 +162,6 @@ $avatarColors = [
                         <?= formatRupiah($c['total_spent']) ?>
                     </td>
                     <td>
-                        <?php if ($c['total_orders'] >= 5): ?>
-                            <div>
-                                <span class="badge badge-vip" style="margin-bottom:2px;"><i class='bx bx-crown' style="margin-right:3px;"></i> VIP</span>
-                                <br><span class="badge" style="background:rgba(111,106,51,0.1); color:#6F6A33; font-size:10px;">MEMBER</span>
-                            </div>
-                        <?php elseif ($c['total_orders'] >= 1): ?>
-                            <span class="badge" style="background:var(--bg-input); color:var(--text-secondary); border:1px solid var(--border);">REGULAR</span>
-                        <?php else: ?>
-                            <span class="badge" style="background:var(--bg-input); color:var(--text-muted);">INACTIVE</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
                         <div class="btn-group">
                             <a href="index.php?page=customer_detail&id=<?= $c['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
                             <a href="index.php?page=customer_form&id=<?= $c['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
@@ -224,12 +177,8 @@ $avatarColors = [
     </div>
 </div>
 
-<!-- Bottom: Add Button + Count -->
-<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-    <a href="index.php?page=customer_form" class="btn btn-primary">
-        <i class='bx bx-plus'></i> Tambah Pelanggan
-    </a>
+<div style="text-align:right; margin-top:12px;">
     <span style="font-size:13px; color:var(--text-muted);">
-        Menampilkan <?= count($customers) ?> dari <?= $totalCustomers ?> pelanggan
+        Menampilkan <?= count($customers) ?> pelanggan
     </span>
 </div>

@@ -18,6 +18,7 @@ $pageTitles = [
     'workers' => ['Worker', 'Manajemen tim joki'],
     'worker_form' => [isset($_GET['id']) ? 'Edit Worker' : 'Tambah Worker', 'Data worker'],
     'worker_detail' => ['Profil Worker', 'Performa dan komisi worker'],
+    'history' => ['Riwayat', 'Pendapatan dan profit'],
 ];
 
 $pageTitle = $pageTitles[$currentPage][0] ?? 'Dashboard';
@@ -30,6 +31,9 @@ $pageSubtitle = $pageTitles[$currentPage][1] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Aero's Store - Sistem Manajemen Internal untuk Joki MLBB">
     <title><?= $pageTitle ?> - <?= APP_NAME ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
@@ -74,6 +78,14 @@ $pageSubtitle = $pageTitles[$currentPage][1] ?? '';
                 <a href="index.php?page=workers" class="nav-link <?= isCurrentPage('workers') || isCurrentPage('worker_form') || isCurrentPage('worker_detail') ? 'active' : '' ?>">
                     <i class='bx bxs-group'></i>
                     <span>Worker</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Laporan</div>
+                <a href="index.php?page=history" class="nav-link <?= isCurrentPage('history') ? 'active' : '' ?>">
+                    <i class='bx bxs-bar-chart-alt-2'></i>
+                    <span>Riwayat</span>
                 </a>
             </div>
         </nav>
