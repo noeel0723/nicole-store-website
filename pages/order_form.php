@@ -424,7 +424,11 @@ if (orderPriceInput && workerCommissionInput) {
     });
     if (workerSelect) {
         workerSelect.addEventListener('change', function() {
-            commissionManuallyEdited = false;
+            // Only auto-set commission if user hasn't manually edited it,
+            // OR if switching to "Admin Sendiri" (which should always zero out)
+            if (this.value === 'admin') {
+                commissionManuallyEdited = false;
+            }
             updateCommission();
         });
     }

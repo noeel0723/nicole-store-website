@@ -280,5 +280,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_commission'])) {
                 <span class="value" style="font-size:12px;"><?= date('d M Y', strtotime($worker['created_at'])) ?></span>
             </div>
         </div>
+
+        <!-- Commission Log Panel (Right Side) -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <h3><i class='bx bx-receipt' style="color:var(--warning)"></i> Log Komisi</h3>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-outline commission-period-btn active" data-period="day" onclick="filterCommission('day', this)">Hari</button>
+                    <button class="btn btn-sm btn-outline commission-period-btn" data-period="week" onclick="filterCommission('week', this)">Minggu</button>
+                    <button class="btn btn-sm btn-outline commission-period-btn" data-period="month" onclick="filterCommission('month', this)">Bulan</button>
+                    <button class="btn btn-sm btn-outline commission-period-btn" data-period="all" onclick="filterCommission('all', this)">Semua</button>
+                </div>
+            </div>
+            <div style="padding:0 16px 8px;">
+                <input type="date" id="commissionDatePicker" class="form-control" style="max-width:180px; font-size:12px;" value="<?= date('Y-m-d') ?>">
+            </div>
+            <div id="commissionLogBody">
+                <?php if (empty($ledgerEntries)): ?>
+                    <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:13px;">
+                        Belum ada catatan komisi.
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($ledgerEntries as $entry): ?>
+                    <div class="commission-log-item" data-date="<?= date('Y-m-d', strtotime($entry['created_at'])) ?>" style="display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--border); font-size:13px;">
+                        <div style="min-width:40px; text-align:center;">
+                            <?php if ($entry['type'] === 'earned'): ?>
+                                <i class='bx bx-up-arrow-alt' style="font-size:18px; color:var(--warning);"></i>
+                            <?php else: ?>
+                                <i class='bx bx-down-arrow-alt' style="font-size:18px; color:var(--success);"></i>
+                            <?php endif; ?>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600; color:var(--text-primary);">
+                                <?= $entry['type'] === 'earned' ? '+' : '-' ?><?= formatRupiah($entry['amount']) ?>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted);">
+                                <?= date('d M Y, H:i', strtotime($entry['created_at'])) ?>
+                                <?php if ($entry['order_number']): ?>
+                                    &bull; <a href="index.php?page=order_detail&id=<?= $entry['order_number'] ?>" style="color:var(--primary-light);">#<?= $entry['order_number'] ?></a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div>
+                            <?php if ($entry['type'] === 'earned'): ?>
+                                <span class="badge badge-warning" style="font-size:10px;">Earned</span>
+                            <?php else: ?>
+                                <span class="badge badge-success" style="font-size:10px;">Paid</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function filterCommission(period, btn) {
+    // Update active button
+    document.querySelectorAll('.commission-period-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+    btn.classList.add('active', 'btn-primary');
+    btn.classList.remove('btn-outline');
+    document.querySelectorAll('.commission-period-btn:not(.active)').forEach(b => {
+        b.classList.add('btn-outline');
+        b.classList.remove('btn-primary');
+    });
+
+    const items = document.querySelectorAll('.commission-log-item');
+    const today = new Date();
+    const datePicker = document.getElementById('commissionDatePicker');
+    const selectedDate = datePicker.value;
+
+    items.forEach(item => {
+        const itemDate = new Date(item.dataset.date);
+        let show = false;
+
+        if (period === 'all') {
+            show = true;
+        } else if (period === 'day') {
+            // Show items matching the selected date
+            show = item.dataset.date === selectedDate;
+        } else if (period === 'week') {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            show = itemDate >= weekAgo;
+        } else if (period === 'month') {
+            show = itemDate.getMonth() === today.getMonth() && itemDate.getFullYear() === today.getFullYear();
+        }
+
+        item.style.display = show ? 'flex' : 'none';
+    });
+}
+
+// Date picker change triggers day filter
+document.getElementById('commissionDatePicker').addEventListener('change', function() {
+    const dayBtn = document.querySelector('.commission-period-btn[data-period="day"]');
+    filterCommission('day', dayBtn);
+});
+
+// Initial filter on load
+document.addEventListener('DOMContentLoaded', function() {
+    const dayBtn = document.querySelector('.commission-period-btn[data-period="day"]');
+    filterCommission('day', dayBtn);
+});
+</script>
