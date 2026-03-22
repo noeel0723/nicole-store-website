@@ -122,8 +122,8 @@ function paymentLabel($status) {
 }
 
 function workerStatusBadge($activeOrders) {
-    if ($activeOrders == 0) return '<span class="badge badge-success">Available</span>';
-    return '<span class="badge badge-danger">Not Available</span>';
+    // Workers can take multiple orders simultaneously
+    return '<span class="badge badge-success">Available</span>';
 }
 
 function isCurrentPage($page) {

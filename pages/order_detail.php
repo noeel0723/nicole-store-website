@@ -122,10 +122,8 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
 <!-- Breadcrumb + Actions -->
 <div class="page-header">
     <div>
-        <a href="index.php?page=orders" style="font-size:13px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; margin-bottom:4px;">
-            <i class='bx bx-arrow-back'></i> Kembali ke Pesanan
-        </a>
         <h2>Pesanan #<?= $order['id'] ?> <?= statusLabel($order['status']) ?></h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:2px;">Dibuat: <?= date('d M Y, H:i', strtotime($order['created_at'])) ?></p>
     </div>
     <div class="btn-group">
         <?php if (!$isCompleted): ?>
@@ -133,6 +131,9 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
             <i class='bx bx-edit'></i> Edit
         </a>
         <?php endif; ?>
+        <a href="index.php?page=orders" class="btn btn-outline">
+            <i class='bx bx-arrow-back'></i> Kembali
+        </a>
     </div>
 </div>
 
@@ -149,7 +150,7 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
                 <div>
                     <span class="od-label">PELANGGAN</span>
                     <span class="od-value">
-                        <a href="index.php?page=customer_detail&id=<?= $order['customer_id'] ?>" style="color:var(--mocha); font-weight:600;">
+                        <a href="index.php?page=customer_detail&id=<?= $order['customer_id'] ?>" style="color:var(--primary); font-weight:600;">
                             <?= sanitize($order['customer_name']) ?>
                         </a>
                     </span>
@@ -271,7 +272,7 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
             </div>
             <?php if ($order['worker_name']): ?>
             <div style="display:flex; align-items:center; gap:14px; padding:4px 0;">
-                <div style="width:46px; height:46px; background:linear-gradient(135deg, var(--mocha), var(--taupe)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:white; flex-shrink:0;">
+                <div style="width:46px; height:46px; background:linear-gradient(135deg, var(--navy), var(--steel)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:white; flex-shrink:0;">
                     <?= strtoupper(substr($order['worker_name'], 0, 1)) ?>
                 </div>
                 <div style="flex:1;">

@@ -134,14 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Header -->
 <div class="page-header">
     <div>
-        <a href="index.php?page=orders" style="font-size:13px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; margin-bottom:4px;">
-            <i class='bx bx-arrow-back'></i> Kembali
-        </a>
         <h2><?= $isEdit ? 'Edit Pesanan' : 'Buat Pesanan Baru' ?></h2>
         <p><?= $isEdit ? 'Perbarui detail pesanan joki untuk memastikan akurasi data' : 'Isi detail pesanan joki baru' ?></p>
     </div>
     <div class="btn-group">
-        <a href="index.php?page=orders" style="color:var(--text-muted); font-size:14px; font-weight:500;">Batalkan</a>
+        <a href="index.php?page=orders" class="btn btn-outline">
+            <i class='bx bx-arrow-back'></i> Kembali
+        </a>
         <button type="submit" form="orderForm" class="btn btn-primary">
             <i class='bx bx-save'></i> <?= $isEdit ? 'Simpan Perubahan' : 'Buat Pesanan' ?>
         </button>
@@ -178,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div id="newCustomerFields" style="display:none; padding:14px; background:var(--bg-input); border-radius:var(--radius-sm); margin-bottom:16px; border:1px solid var(--border);">
-                <p style="font-size:12px; color:var(--mocha); margin-bottom:10px; font-weight:600;">
+                <p style="font-size:12px; color:var(--primary); margin-bottom:10px; font-weight:600;">
                     <i class='bx bx-plus-circle'></i> Info Pelanggan Baru
                 </p>
                 <div class="form-group">
