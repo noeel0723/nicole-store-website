@@ -99,48 +99,61 @@ $allOrders = $stmt->fetchAll();
     </select>
 </div>
 
+<?php if (empty($allOrders)): ?>
 <div class="card">
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Pelanggan</th>
-                    <th>Rank</th>
-                    <th>Worker</th>
-                    <th>Harga</th>
-                    <th>Pembayaran</th>
-                    <th>Status</th>
-                    <th>Deadline</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($allOrders)): ?>
-                <tr><td colspan="9"><div class="empty-state"><i class='bx bx-receipt'></i><h3>Belum Ada Pesanan</h3></div></td></tr>
-                <?php else: ?>
-                <?php foreach ($allOrders as $o): ?>
-                <tr>
-                    <td style="font-weight:600; color:var(--text-muted);">#<?= $o['id'] ?></td>
-                    <td style="font-weight:600; color:var(--text-primary);"><?= sanitize($o['customer_name']) ?></td>
-                    <td style="font-size:12px;"><?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?></td>
-                    <td><?= $o['worker_name'] ? sanitize($o['worker_name']) : '<span style="color:var(--danger)">-</span>' ?></td>
-                    <td style="font-weight:600; color:var(--success);"><?= formatRupiah($o['price']) ?></td>
-                    <td><?= paymentLabel($o['payment_status']) ?></td>
-                    <td><?= statusLabel($o['status']) ?></td>
-                    <td style="font-size:12px;"><?= $o['deadline'] ? date('d M Y', strtotime($o['deadline'])) : '-' ?></td>
-                    <td>
-                        <div class="btn-group">
-                            <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
-                            <a href="index.php?page=order_form&id=<?= $o['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
-                            <a href="index.php?page=orders&delete=<?= $o['id'] ?>" class="btn-icon" title="Hapus"
-                               onclick="return confirm('Yakin ingin menghapus pesanan ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+    <div class="empty-state">
+        <i class='bx bx-receipt'></i>
+        <h3>Belum Ada Pesanan</h3>
+        <p>Buat pesanan pertama Anda.</p>
     </div>
 </div>
+<?php else: ?>
+<div class="order-cards-grid">
+    <?php foreach ($allOrders as $o): ?>
+    <div class="order-card status-<?= $o['status'] ?>">
+        <div class="order-card-header">
+            <div class="oc-left">
+                <div class="oc-avatar">
+                    <?= strtoupper(substr($o['customer_name'], 0, 1)) ?>
+                </div>
+                <div class="oc-info">
+                    <span class="oc-customer"><?= sanitize($o['customer_name']) ?></span>
+                    <span class="oc-id">Pesanan #<?= $o['id'] ?></span>
+                </div>
+            </div>
+            <?= statusLabel($o['status']) ?>
+        </div>
+
+        <div class="order-card-body">
+            <div class="oc-rank">
+                <i class='bx bx-trophy'></i>
+                <?= sanitize($o['rank_from']) ?> → <?= sanitize($o['rank_to']) ?>
+            </div>
+
+            <div class="oc-detail-row">
+                <span class="oc-label">Worker</span>
+                <span class="oc-value"><?= $o['worker_name'] ? sanitize($o['worker_name']) : '<span style="color:var(--danger)">Belum ditugaskan</span>' ?></span>
+            </div>
+            <div class="oc-detail-row">
+                <span class="oc-label">Pembayaran</span>
+                <span class="oc-value"><?= paymentLabel($o['payment_status']) ?></span>
+            </div>
+            <div class="oc-detail-row">
+                <span class="oc-label">Deadline</span>
+                <span class="oc-value"><?= $o['deadline'] ? date('d M Y', strtotime($o['deadline'])) : '-' ?></span>
+            </div>
+        </div>
+
+        <div class="order-card-footer">
+            <span class="oc-price"><?= formatRupiah($o['price']) ?></span>
+            <div class="oc-actions">
+                <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
+                <a href="index.php?page=order_form&id=<?= $o['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
+                <a href="index.php?page=orders&delete=<?= $o['id'] ?>" class="btn-icon" title="Hapus"
+                   onclick="return confirm('Yakin ingin menghapus pesanan ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>

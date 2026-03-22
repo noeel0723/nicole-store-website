@@ -122,9 +122,8 @@ function paymentLabel($status) {
 }
 
 function workerStatusBadge($activeOrders) {
-    if ($activeOrders == 0) return '<span class="badge badge-success">Idle</span>';
-    if ($activeOrders <= 2) return '<span class="badge badge-info">Active</span>';
-    return '<span class="badge badge-danger">Overloaded</span>';
+    if ($activeOrders == 0) return '<span class="badge badge-success">Available</span>';
+    return '<span class="badge badge-danger">Not Available</span>';
 }
 
 function isCurrentPage($page) {

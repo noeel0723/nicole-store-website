@@ -1939,6 +1939,389 @@ textarea.form-control {
     cursor: pointer;
 }
 
+/* ============================================
+   Order Cards Grid
+   ============================================ */
+.order-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.order-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(52, 73, 69, 0.18);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(52, 73, 69, 0.10);
+}
+
+.order-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--border);
+}
+
+.order-card.status-unassigned::before { background: linear-gradient(90deg, var(--warning), #C8C48A); }
+.order-card.status-in_progress::before { background: linear-gradient(90deg, var(--info), #A7BEC6); }
+.order-card.status-pending_verification::before { background: linear-gradient(90deg, var(--purple), #96A5A1); }
+.order-card.status-completed::before { background: linear-gradient(90deg, var(--success), var(--accent-light)); }
+
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(52, 73, 69, 0.15);
+    border-color: rgba(52, 73, 69, 0.28);
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.order-card-header .oc-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-card-header .oc-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.order-card-header .oc-info .oc-customer {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+}
+
+.order-card-header .oc-info .oc-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.order-card-body {
+    flex: 1;
+    margin-bottom: 14px;
+}
+
+.order-card-body .oc-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.order-card-body .oc-detail-row .oc-label {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.order-card-body .oc-detail-row .oc-value {
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: right;
+    font-size: 13px;
+}
+
+.order-card-body .oc-rank {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.order-card-body .oc-rank i {
+    color: var(--primary-light);
+}
+
+.order-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.order-card-footer .oc-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.order-card-footer .oc-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.order-card-footer .oc-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+}
+
+/* ============================================
+   Worker List Cards
+   ============================================ */
+.worker-list {
+    background: var(--bg-card);
+    border: 1px solid rgba(52, 73, 69, 0.18);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px rgba(52, 73, 69, 0.10);
+    overflow: hidden;
+}
+
+.worker-list-card {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.worker-list-card:last-child {
+    border-bottom: none;
+}
+
+.worker-list-card:hover {
+    background: var(--bg-card-hover);
+}
+
+.wlc-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.wlc-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.wlc-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.wlc-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wlc-meta-item {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wlc-meta-item i {
+    font-size: 14px;
+}
+
+.wlc-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.wlc-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: rgba(52, 73, 69, 0.08);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.wlc-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.wlc-commission {
+    text-align: right;
+    min-width: 100px;
+}
+
+.wlc-commission-value {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.wlc-commission-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.wlc-status {
+    min-width: 100px;
+    text-align: center;
+}
+
+.wlc-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.wlc-actions .btn-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+}
+
+/* ============================================
+   Proof Drop Zone
+   ============================================ */
+.proof-drop-zone {
+    border: 2px dashed var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--bg-input);
+    position: relative;
+}
+
+.proof-drop-zone:hover,
+.proof-drop-zone.dragover {
+    border-color: var(--primary);
+    background: rgba(52, 73, 69, 0.06);
+}
+
+.proof-drop-zone.dragover {
+    transform: scale(1.01);
+}
+
+.proof-drop-zone.has-image {
+    padding: 12px;
+    border-style: solid;
+    border-color: var(--success);
+    background: rgba(79, 111, 102, 0.06);
+}
+
+.proof-drop-zone .pdz-icon {
+    font-size: 36px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: block;
+}
+
+.proof-drop-zone .pdz-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.proof-drop-zone .pdz-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.proof-drop-zone .pdz-preview {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.proof-drop-zone .pdz-change {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--primary-light);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.proof-drop-zone .pdz-change:hover {
+    text-decoration: underline;
+}
+
+/* Responsive additions for new components */
+@media (max-width: 1024px) {
+    .order-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .wlc-right {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .worker-list-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .wlc-right {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .wlc-commission {
+        text-align: left;
+    }
+}
+
 .proof-upload-section input[type="file"]:hover {
     border-color: var(--primary);
 }

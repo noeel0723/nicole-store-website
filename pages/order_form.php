@@ -48,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jokiType = trim($_POST['joki_type'] ?? '');
     $specialRequest = trim($_POST['special_request'] ?? '');
     $price = (float)str_replace(['.', ','], ['', '.'], $_POST['price']);
-    $workerCommission = $isAdminSendiri ? 0 : round($price * 0.7, 2);
+    $workerCommissionRaw = str_replace(['.', ','], ['', '.'], $_POST['worker_commission'] ?? '');
+    $workerCommission = $isAdminSendiri ? 0 : (is_numeric($workerCommissionRaw) ? round((float)$workerCommissionRaw, 2) : round($price * 0.7, 2));
     $paymentStatus = $_POST['payment_status'];
     $deadline = !empty($_POST['deadline']) ? $_POST['deadline'] : null;
 
@@ -219,9 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="form-group">
                 <label>Komisi Worker (70%)</label>
-                <input type="text" name="worker_commission" id="workerCommission" class="form-control" placeholder="Otomatis dari harga"
-                       readonly
+                <input type="text" name="worker_commission" id="workerCommission" class="form-control" placeholder="Otomatis 70% dari harga, bisa diubah manual"
                        value="<?= $isEdit ? $order['worker_commission'] : '' ?>">
+                <small style="color:var(--text-muted); font-size:11px;">Otomatis 70%. Bisa diketik manual untuk mengubah.</small>
             </div>
         </div>
 
@@ -334,10 +335,11 @@ if (searchInput) {
     });
 }
 
-// Auto-calculate worker commission = 70% of total price
+// Auto-calculate worker commission = 70% of total price (editable)
 const orderPriceInput = document.getElementById('orderPrice');
 const workerCommissionInput = document.getElementById('workerCommission');
 const workerSelect = document.getElementById('workerSelect');
+let commissionManuallyEdited = false;
 
 function parseToNumber(value) {
     if (!value) return 0;
@@ -348,6 +350,7 @@ function parseToNumber(value) {
 
 function updateCommission() {
     if (!orderPriceInput || !workerCommissionInput) return;
+    if (commissionManuallyEdited) return;
     const isAdmin = workerSelect && workerSelect.value === 'admin';
     const price = parseToNumber(orderPriceInput.value);
     if (isAdmin) {
@@ -358,10 +361,21 @@ function updateCommission() {
 }
 
 if (orderPriceInput && workerCommissionInput) {
-    orderPriceInput.addEventListener('input', updateCommission);
+    orderPriceInput.addEventListener('input', function() {
+        commissionManuallyEdited = false;
+        updateCommission();
+    });
+    workerCommissionInput.addEventListener('input', function() {
+        commissionManuallyEdited = true;
+    });
     if (workerSelect) {
-        workerSelect.addEventListener('change', updateCommission);
+        workerSelect.addEventListener('change', function() {
+            commissionManuallyEdited = false;
+            updateCommission();
+        });
     }
-    updateCommission();
+    if (!workerCommissionInput.value) {
+        updateCommission();
+    }
 }
 </script>

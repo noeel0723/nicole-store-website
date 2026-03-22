@@ -322,19 +322,23 @@ $jokiTypeDisplay = $jokiTypeLabels[$order['joki_type'] ?? ''] ?? null;
                         <input type="hidden" name="update_status" value="1">
                         <input type="hidden" name="new_status" value="completed">
 
-                        <div class="proof-upload-section" style="margin-bottom:12px; padding:16px; background:var(--bg-input); border-radius:var(--radius-sm); border:1px solid var(--border);">
+                        <div class="proof-upload-section" style="margin-bottom:12px;">
                             <label style="display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">
                                 <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti / Testimoni *
                             </label>
-                            <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*"
-                                   style="width:100%; font-size:13px;" required>
-                            <div id="proofPreview" style="margin-top:10px; display:none;">
-                                <img id="proofPreviewImg" src="" alt="Preview"
-                                     style="max-width:100%; max-height:200px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*" capture="environment"
+                                   style="display:none;" required>
+                            <div class="proof-drop-zone" id="proofDropZone">
+                                <div id="proofPlaceholder">
+                                    <i class='bx bx-cloud-upload pdz-icon'></i>
+                                    <p class="pdz-text">Seret gambar ke sini, tempel (Ctrl+V), atau klik untuk pilih</p>
+                                    <p class="pdz-hint">Format: JPG, PNG, WEBP, GIF — Wajib untuk menyelesaikan pesanan</p>
+                                </div>
+                                <div id="proofPreview" style="display:none;">
+                                    <img id="proofPreviewImg" src="" alt="Preview" class="pdz-preview">
+                                    <span class="pdz-change">📷 Klik untuk ganti gambar</span>
+                                </div>
                             </div>
-                            <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">
-                                Format: JPG, PNG, WEBP, GIF. Wajib diupload untuk menyelesaikan pesanan.
-                            </p>
                         </div>
 
                         <button type="submit" class="btn btn-success" style="width:100%;"
@@ -363,30 +367,83 @@ $jokiTypeDisplay = $jokiTypeLabels[$order['joki_type'] ?? ''] ?? null;
 </div>
 
 <script>
-// Preview uploaded proof photo
+// Proof upload: drag-drop, paste, click
 const proofInput = document.getElementById('proofPhotoInput');
+const dropZone = document.getElementById('proofDropZone');
+const proofPlaceholder = document.getElementById('proofPlaceholder');
 const proofPreview = document.getElementById('proofPreview');
 const proofPreviewImg = document.getElementById('proofPreviewImg');
 
-if (proofInput) {
+function showImagePreview(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        proofPreviewImg.src = e.target.result;
+        proofPlaceholder.style.display = 'none';
+        proofPreview.style.display = 'block';
+        dropZone.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+}
+
+function setFileInput(file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    proofInput.files = dt.files;
+    showImagePreview(file);
+}
+
+if (dropZone && proofInput) {
+    // Click to open file picker
+    dropZone.addEventListener('click', function() {
+        proofInput.click();
+    });
+
     proofInput.addEventListener('change', function() {
         if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                proofPreviewImg.src = e.target.result;
-                proofPreview.style.display = 'block';
-            };
-            reader.readAsDataURL(this.files[0]);
-        } else {
-            proofPreview.style.display = 'none';
+            showImagePreview(this.files[0]);
+        }
+    });
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setFileInput(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Clipboard paste (Ctrl+V)
+    document.addEventListener('paste', function(e) {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+                e.preventDefault();
+                const blob = items[i].getAsFile();
+                const ext = blob.type.split('/')[1] || 'png';
+                const file = new File([blob], 'screenshot_' + Date.now() + '.' + ext, { type: blob.type });
+                setFileInput(file);
+                break;
+            }
         }
     });
 }
 
 function validateProofPhoto() {
-    const input = document.getElementById('proofPhotoInput');
-    if (!input || !input.files || input.files.length === 0) {
-        alert('Wajib upload foto bukti/testimoni untuk menyelesaikan pesanan!');
+    if (!proofInput || !proofInput.files || proofInput.files.length === 0) {
+        alert('Wajib upload foto bukti/testimoni untuk menyelesaikan pesanan!\nAnda bisa drag & drop, paste screenshot (Ctrl+V), atau klik area upload.');
         return false;
     }
     return confirm('Yakin pesanan sudah selesai? Pastikan foto bukti sudah benar.');

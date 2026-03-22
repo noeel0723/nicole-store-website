@@ -61,59 +61,65 @@ $workers = $stmt->fetchAll();
     </div>
 </div>
 
+<?php if (empty($workers)): ?>
 <div class="card">
-    <div class="table-wrapper">
-        <table class="workers-table">
-            <thead>
-                <tr>
-                    <th>Nama Worker</th>
-                    <th>Highest Rank</th>
-                    <th>3 Role Utama</th>
-                    <th>Saldo Komisi</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($workers)): ?>
-                <tr><td colspan="6"><div class="empty-state"><i class='bx bx-user-plus'></i><h3>Belum Ada Worker</h3><p>Rekrut worker pertama Anda.</p></div></td></tr>
-                <?php else: ?>
-                <?php foreach ($workers as $w): ?>
-                <?php $pendingCommission = $w['total_earned'] - $w['total_paid']; ?>
-                <tr>
-                    <td class="worker-cell">
-                        <div class="worker-mini">
-                            <div style="width:36px; height:36px; background:linear-gradient(135deg, var(--primary), var(--accent)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0;">
-                                <?= strtoupper(substr($w['name'], 0, 1)) ?>
-                            </div>
-                            <div class="worker-mini-info">
-                                <strong class="worker-mini-name"><?= sanitize($w['name']) ?></strong>
-                                <span class="worker-mini-contact"><?= sanitize($w['phone'] ?? '-') ?></span>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="font-weight:600; font-size:13px;"><?= sanitize($w['rank_info'] ?? '-') ?></td>
-                    <td class="worker-specialization" style="font-size:13px;"><?= sanitize($w['roles'] ?? '-') ?></td>
-                    <td>
-                        <?php if ($pendingCommission > 0): ?>
-                            <span style="color:var(--warning); font-weight:700;"><?= formatRupiah($pendingCommission) ?></span>
-                        <?php else: ?>
-                            <span style="color:var(--text-muted);">Rp 0</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?= workerStatusBadge($w['active_orders']) ?></td>
-                    <td>
-                        <div class="btn-group">
-                            <a href="index.php?page=worker_detail&id=<?= $w['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
-                            <a href="index.php?page=worker_form&id=<?= $w['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
-                            <a href="index.php?page=workers&delete=<?= $w['id'] ?>" class="btn-icon" title="Hapus"
-                               onclick="return confirm('Yakin hapus worker ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+    <div class="empty-state">
+        <i class='bx bx-user-plus'></i>
+        <h3>Belum Ada Worker</h3>
+        <p>Rekrut worker pertama Anda.</p>
     </div>
 </div>
+<?php else: ?>
+<div class="worker-list">
+    <?php foreach ($workers as $w): ?>
+    <?php $pendingCommission = $w['total_earned'] - $w['total_paid']; ?>
+    <div class="worker-list-card">
+        <div class="wlc-avatar">
+            <?= strtoupper(substr($w['name'], 0, 1)) ?>
+        </div>
+        <div class="wlc-info">
+            <span class="wlc-name"><?= sanitize($w['name']) ?></span>
+            <div class="wlc-meta">
+                <span class="wlc-meta-item">
+                    <i class='bx bx-credit-card'></i> <?= sanitize($w['phone'] ?? '-') ?>
+                </span>
+                <span class="wlc-meta-item">
+                    <i class='bx bx-trophy'></i> <?= sanitize($w['rank_info'] ?? '-') ?>
+                </span>
+                <?php if ($w['active_orders'] > 0): ?>
+                <span class="wlc-meta-item">
+                    <i class='bx bx-loader-alt'></i> <?= $w['active_orders'] ?> pesanan aktif
+                </span>
+                <?php endif; ?>
+            </div>
+            <?php if ($w['roles']): ?>
+            <div class="wlc-tags">
+                <?php foreach (array_filter(array_map('trim', explode(',', $w['roles']))) as $role): ?>
+                <span class="wlc-tag"><i class='bx bx-shield-quarter'></i> <?= sanitize($role) ?></span>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <div class="wlc-right">
+            <div class="wlc-commission">
+                <?php if ($pendingCommission > 0): ?>
+                <span class="wlc-commission-value" style="color:var(--warning);"><?= formatRupiah($pendingCommission) ?></span>
+                <?php else: ?>
+                <span class="wlc-commission-value" style="color:var(--text-muted);">Rp 0</span>
+                <?php endif; ?>
+                <span class="wlc-commission-label">Saldo Komisi</span>
+            </div>
+            <div class="wlc-status">
+                <?= workerStatusBadge($w['active_orders']) ?>
+            </div>
+            <div class="wlc-actions">
+                <a href="index.php?page=worker_detail&id=<?= $w['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
+                <a href="index.php?page=worker_form&id=<?= $w['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
+                <a href="index.php?page=workers&delete=<?= $w['id'] ?>" class="btn-icon" title="Hapus"
+                   onclick="return confirm('Yakin hapus worker ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
