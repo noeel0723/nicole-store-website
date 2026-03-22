@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             }
 
             $completedAt = date('Y-m-d H:i:s');
-            $stmt = $db->prepare("UPDATE orders SET status = ?, completed_at = ?, proof_photo = ?, updated_at = NOW() WHERE id = ?");
+            $stmt = $db->prepare("UPDATE orders SET status = ?, payment_status = 'paid', completed_at = ?, proof_photo = ?, updated_at = NOW() WHERE id = ?");
             $stmt->execute([$newStatus, $completedAt, $proofPath, $orderId]);
 
             // Commission entry

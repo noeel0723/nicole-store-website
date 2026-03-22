@@ -25,7 +25,7 @@ if ($isEdit) {
 $workers = $db->query("SELECT id, name, rank_info FROM workers WHERE is_active = 1 ORDER BY name")->fetchAll();
 
 // Get customers for autocomplete
-$customers = $db->query("SELECT id, name, phone, game_id FROM customers ORDER BY name")->fetchAll();
+$customers = $db->query("SELECT id, name, phone, game_id FROM customers WHERE is_guest = 0 ORDER BY name")->fetchAll();
 
 // Rank suggestions
 $rankSuggestions = [];
@@ -74,29 +74,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $inputName = trim($_POST['customer_name_input']);
         $inputPhone = trim($_POST['new_customer_phone'] ?? '');
         $inputGameId = trim($_POST['new_customer_game_id'] ?? '');
+        $saveCustomer = !empty($_POST['save_customer']) ? 1 : 0;
 
-        // Check if customer already exists by name + phone
-        if ($inputPhone) {
-            $existingStmt = $db->prepare("SELECT id FROM customers WHERE name = ? AND phone LIKE ?");
-            $existingStmt->execute([$inputName, "%$inputPhone%"]);
-            $existingCustomer = $existingStmt->fetch();
-        } else {
-            $existingStmt = $db->prepare("SELECT id FROM customers WHERE name = ?");
-            $existingStmt->execute([$inputName]);
-            $existingCustomer = $existingStmt->fetch();
-        }
+        // Check if customer already exists by name
+        $existingStmt = $db->prepare("SELECT id, is_guest FROM customers WHERE name = ?");
+        $existingStmt->execute([$inputName]);
+        $existingCustomer = $existingStmt->fetch();
 
         if ($existingCustomer) {
             $customerId = $existingCustomer['id'];
+            // If they check "Simpan" and the previous record was a guest, upgrade it
+            if ($saveCustomer && $existingCustomer['is_guest']) {
+                $db->prepare("UPDATE customers SET is_guest = 0 WHERE id = ?")->execute([$customerId]);
+            }
         } else {
-            // Check order count by same name to decide if we register
-            $orderCountStmt = $db->prepare("SELECT COUNT(*) FROM orders o JOIN customers c ON o.customer_id = c.id WHERE c.name = ?");
-            $orderCountStmt->execute([$inputName]);
-            $previousOrders = $orderCountStmt->fetchColumn();
-
-            // Always create customer record (they become "registered" when total_orders >= 2)
-            $stmt = $db->prepare("INSERT INTO customers (name, phone, game_id) VALUES (?, ?, ?)");
-            $stmt->execute([$inputName, $inputPhone, $inputGameId]);
+            // Create customer record (is_guest determines if they show in the Pelanggan list)
+            $isGuest = $saveCustomer ? 0 : 1;
+            $stmt = $db->prepare("INSERT INTO customers (name, phone, game_id, is_guest) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$inputName, $inputPhone, $inputGameId, $isGuest]);
             $customerId = $db->lastInsertId();
         }
     }
@@ -187,6 +182,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group">
                     <label>ID Game</label>
                     <input type="text" name="new_customer_game_id" class="form-control" placeholder="ID Game MLBB">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1; margin-bottom:0;">
+                    <label style="font-size:13px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" name="save_customer" value="1" checked>
+                        <span>Simpan sebagai pelanggan terdaftar</span>
+                    </label>
                 </div>
             </div>
 

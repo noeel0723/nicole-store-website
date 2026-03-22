@@ -29,6 +29,7 @@ CREATE TABLE `customers` (
     `name` VARCHAR(100) NOT NULL,
     `phone` VARCHAR(255) DEFAULT NULL,
     `game_id` VARCHAR(50) DEFAULT NULL,
+    `is_guest` TINYINT(1) DEFAULT 0,
     `notes` TEXT DEFAULT NULL,
     `total_orders` INT DEFAULT 0,
     `total_spent` DECIMAL(15,2) DEFAULT 0.00,

@@ -22,7 +22,7 @@ $validPages = [
     'orders', 'order_form', 'order_detail',
     'customers', 'customer_form', 'customer_detail',
     'workers', 'worker_form', 'worker_detail',
-    'history'
+    'history', 'log_activity'
 ];
 
 if (!in_array($page, $validPages)) {

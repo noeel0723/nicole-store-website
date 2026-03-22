@@ -20,7 +20,7 @@ if (strlen($query) < 1) {
     exit;
 }
 
-$stmt = $db->prepare("SELECT id, name, phone, game_id FROM customers WHERE name LIKE ? OR game_id LIKE ? OR phone LIKE ? ORDER BY name LIMIT 10");
+$stmt = $db->prepare("SELECT id, name, phone, game_id FROM customers WHERE is_guest = 0 AND (name LIKE ? OR game_id LIKE ? OR phone LIKE ?) ORDER BY name LIMIT 10");
 $stmt->execute(["%$query%", "%$query%", "%$query%"]);
 $results = $stmt->fetchAll();
 

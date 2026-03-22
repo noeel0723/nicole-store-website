@@ -74,8 +74,9 @@ $orderCount = count($orders);
 
 <div class="page-header">
     <div>
-        <h2>Riwayat Pendapatan</h2>
-        <p><?= $periodLabel ?> — <?= $orderCount ?> pesanan selesai</p>
+        <!-- Left: Revenue Stats -->
+        <h2>Log Transaction</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-top:4px;"><?= $periodLabel ?> &mdash; <?= $orderCount ?> pesanan selesai</p>
     </div>
 </div>
 

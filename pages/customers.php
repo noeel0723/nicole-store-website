@@ -18,10 +18,10 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 }
 
 $search = $_GET['search'] ?? '';
-$where = '';
+$where = 'WHERE is_guest = 0';
 $params = [];
 if ($search) {
-    $where = "WHERE name LIKE ? OR phone LIKE ? OR game_id LIKE ?";
+    $where .= " AND (name LIKE ? OR phone LIKE ? OR game_id LIKE ?)";
     $params = ["%$search%", "%$search%", "%$search%"];
 }
 

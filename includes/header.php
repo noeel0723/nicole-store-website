@@ -18,7 +18,8 @@ $pageTitles = [
     'workers' => ['Worker', 'Manajemen tim joki'],
     'worker_form' => [isset($_GET['id']) ? 'Edit Worker' : 'Tambah Worker', 'Data worker'],
     'worker_detail' => ['Profil Worker', 'Performa dan komisi worker'],
-    'history' => ['Riwayat', 'Pendapatan dan profit'],
+    'history' => ['Log Transaction', 'Pendapatan dan profit'],
+    'log_activity' => ['Log Activity', 'Riwayat aktivitas tiket'],
 ];
 
 $pageTitle = $pageTitles[$currentPage][0] ?? 'Dashboard';
@@ -85,7 +86,11 @@ $pageSubtitle = $pageTitles[$currentPage][1] ?? '';
                 <div class="nav-section-title">Laporan</div>
                 <a href="index.php?page=history" class="nav-link <?= isCurrentPage('history') ? 'active' : '' ?>">
                     <i class='bx bxs-bar-chart-alt-2'></i>
-                    <span>Riwayat</span>
+                    <span>Log Transaction</span>
+                </a>
+                <a href="index.php?page=log_activity" class="nav-link <?= isCurrentPage('log_activity') ? 'active' : '' ?>">
+                    <i class='bx bxs-time'></i>
+                    <span>Log Activity</span>
                 </a>
             </div>
         </nav>
