@@ -29,7 +29,7 @@ $criticalOrders = $db->query("
     ORDER BY
         CASE WHEN o.status = 'unassigned' THEN 0 ELSE 1 END,
         CASE WHEN o.deadline IS NOT NULL THEN o.deadline ELSE '9999-12-31' END ASC
-    LIMIT 10
+    LIMIT 100
 ")->fetchAll();
 
 // ======= Worker Radar =======
@@ -145,7 +145,7 @@ $totalOrdersThisMonth = $db->query("SELECT COUNT(*) FROM orders WHERE MONTH(crea
                                 <th>Deadline</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="criticalOrdersBody">
                             <?php foreach ($criticalOrders as $order): ?>
                             <tr onclick="location.href='index.php?page=order_detail&id=<?= $order['id'] ?>'" style="cursor:pointer">
                                 <td style="color:var(--text-muted); font-weight:600;">#<?= $order['id'] ?></td>
@@ -175,6 +175,7 @@ $totalOrdersThisMonth = $db->query("SELECT COUNT(*) FROM orders WHERE MONTH(crea
                         </tbody>
                     </table>
                 </div>
+                <div class="table-pagination" id="criticalOrdersPagination"></div>
             <?php endif; ?>
         </div>
 
@@ -207,3 +208,61 @@ $totalOrdersThisMonth = $db->query("SELECT COUNT(*) FROM orders WHERE MONTH(crea
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.getElementById('criticalOrdersBody');
+    const pagination = document.getElementById('criticalOrdersPagination');
+    if (!tbody || !pagination) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const perPage = 10;
+    const totalPages = Math.ceil(rows.length / perPage);
+    let currentPage = 1;
+
+    if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+    }
+
+    function renderRows() {
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        rows.forEach((row, index) => {
+            row.style.display = index >= start && index < end ? '' : 'none';
+        });
+    }
+
+    function createButton(label, page, isActive, disabled) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'page-btn' + (isActive ? ' active' : '');
+        btn.textContent = label;
+        btn.disabled = disabled;
+        if (!disabled) {
+            btn.addEventListener('click', function() {
+                currentPage = page;
+                renderRows();
+                renderPagination();
+            });
+        }
+        return btn;
+    }
+
+    function renderPagination() {
+        pagination.innerHTML = '';
+        pagination.appendChild(createButton('Prev', currentPage - 1, false, currentPage === 1));
+
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        for (let page = startPage; page <= endPage; page++) {
+            pagination.appendChild(createButton(String(page), page, page === currentPage, false));
+        }
+
+        pagination.appendChild(createButton('Next', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    renderRows();
+    renderPagination();
+});
+</script>
