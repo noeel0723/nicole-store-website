@@ -110,8 +110,9 @@ foreach ($logs as $log) {
         <p>Belum ada aktivitas yang dicatat.</p>
     </div>
 <?php else: ?>
+    <div id="activityListWrap">
     <?php foreach ($grouped as $date => $entries): ?>
-        <div style="margin-bottom:24px;">
+        <div class="activity-date-group" style="margin-bottom:24px;">
             <div style="font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; padding-left:4px;">
                 <i class='bx bx-calendar' style="margin-right:4px;"></i>
                 <?= date('d M Y', strtotime($date)) ?>
@@ -121,7 +122,7 @@ foreach ($logs as $log) {
             </div>
 
             <?php foreach ($entries as $log): ?>
-            <div class="card" style="padding:16px 20px; margin-bottom:8px; border-left:3px solid var(--primary); transition: transform 0.15s;">
+            <div class="card activity-item" style="padding:16px 20px; margin-bottom:8px; border-left:3px solid var(--primary); transition: transform 0.15s;">
                 <div style="display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
                     <!-- Time -->
                     <div style="min-width:50px; text-align:center;">
@@ -164,4 +165,66 @@ foreach ($logs as $log) {
             <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
+    </div>
+    <div class="table-pagination" id="activityPagination"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = Array.from(document.querySelectorAll('.activity-item'));
+        const groups = Array.from(document.querySelectorAll('.activity-date-group'));
+        const pagination = document.getElementById('activityPagination');
+
+        if (!pagination || items.length <= 10) {
+            if (pagination) pagination.style.display = 'none';
+            return;
+        }
+
+        const perPage = 10;
+        const totalPages = Math.ceil(items.length / perPage);
+        let currentPage = 1;
+
+        function createBtn(label, page, active, disabled) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'page-btn' + (active ? ' active' : '');
+            btn.textContent = label;
+            btn.disabled = disabled;
+            if (!disabled) {
+                btn.addEventListener('click', function() {
+                    currentPage = page;
+                    renderItems();
+                    renderPagination();
+                });
+            }
+            return btn;
+        }
+
+        function renderItems() {
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            items.forEach((item, idx) => {
+                item.style.display = (idx >= start && idx < end) ? '' : 'none';
+            });
+
+            groups.forEach((group) => {
+                const visible = group.querySelector('.activity-item:not([style*="display: none"])');
+                group.style.display = visible ? '' : 'none';
+            });
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = '';
+            pagination.appendChild(createBtn('Prev', currentPage - 1, false, currentPage === 1));
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            for (let page = startPage; page <= endPage; page++) {
+                pagination.appendChild(createBtn(String(page), page, page === currentPage, false));
+            }
+            pagination.appendChild(createBtn('Next', currentPage + 1, false, currentPage === totalPages));
+        }
+
+        renderItems();
+        renderPagination();
+    });
+    </script>
 <?php endif; ?>

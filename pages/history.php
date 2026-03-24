@@ -167,8 +167,9 @@ $orderCount = count($orders);
         <span class="hp-col hp-col-net">Profit</span>
     </div>
 
+    <div id="historyRows">
     <?php foreach ($orders as $o): ?>
-    <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="hp-row">
+    <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="hp-row history-row-item">
         <span class="hp-col hp-col-date">
             <?= date('d M Y', strtotime($o['completed_at'])) ?>
             <small class="hp-time"><?= date('H:i', strtotime($o['completed_at'])) ?></small>
@@ -190,6 +191,7 @@ $orderCount = count($orders);
         </span>
     </a>
     <?php endforeach; ?>
+    </div>
 
     <div class="hp-footer">
         <span class="hp-col hp-col-date"><strong>Total</strong></span>
@@ -201,4 +203,58 @@ $orderCount = count($orders);
         <span class="hp-col hp-col-net" style="color:var(--success);"><strong><?= formatRupiah($totalNet) ?></strong></span>
     </div>
 </div>
+<div class="table-pagination" id="historyPagination"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = Array.from(document.querySelectorAll('#historyRows .history-row-item'));
+    const pagination = document.getElementById('historyPagination');
+    if (!pagination || rows.length <= 10) {
+        if (pagination) pagination.style.display = 'none';
+        return;
+    }
+
+    const perPage = 10;
+    const totalPages = Math.ceil(rows.length / perPage);
+    let currentPage = 1;
+
+    function createBtn(label, page, active, disabled) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'page-btn' + (active ? ' active' : '');
+        btn.textContent = label;
+        btn.disabled = disabled;
+        if (!disabled) {
+            btn.addEventListener('click', function() {
+                currentPage = page;
+                renderRows();
+                renderPagination();
+            });
+        }
+        return btn;
+    }
+
+    function renderRows() {
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        rows.forEach((row, idx) => {
+            row.style.display = (idx >= start && idx < end) ? '' : 'none';
+        });
+    }
+
+    function renderPagination() {
+        pagination.innerHTML = '';
+        pagination.appendChild(createBtn('Prev', currentPage - 1, false, currentPage === 1));
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        for (let page = startPage; page <= endPage; page++) {
+            pagination.appendChild(createBtn(String(page), page, page === currentPage, false));
+        }
+        pagination.appendChild(createBtn('Next', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    renderRows();
+    renderPagination();
+});
+</script>
 <?php endif; ?>

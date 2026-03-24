@@ -110,6 +110,14 @@ $allOrders = $stmt->fetchAll();
 <?php else: ?>
 <div class="order-cards-grid">
     <?php foreach ($allOrders as $o): ?>
+    <?php
+    $workerLabel = '<span style="color:var(--danger)">Belum ditugaskan</span>';
+    if (!empty($o['worker_name'])) {
+        $workerLabel = sanitize($o['worker_name']);
+    } elseif ((float)$o['worker_commission'] === 0.0 && $o['status'] !== 'unassigned') {
+        $workerLabel = '<span style="color:var(--primary); font-weight:600;">Admin</span>';
+    }
+    ?>
     <div class="order-card status-<?= $o['status'] ?>">
         <div class="order-card-header">
             <div class="oc-left">
@@ -132,7 +140,7 @@ $allOrders = $stmt->fetchAll();
 
             <div class="oc-detail-row">
                 <span class="oc-label">Worker</span>
-                <span class="oc-value"><?= $o['worker_name'] ? sanitize($o['worker_name']) : '<span style="color:var(--danger)">Belum ditugaskan</span>' ?></span>
+                <span class="oc-value"><?= $workerLabel ?></span>
             </div>
             <div class="oc-detail-row">
                 <span class="oc-label">Pembayaran</span>

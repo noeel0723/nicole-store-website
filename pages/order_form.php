@@ -27,6 +27,13 @@ $workers = $db->query("SELECT id, name, rank_info FROM workers WHERE is_active =
 // Get customers for autocomplete
 $customers = $db->query("SELECT id, name, phone, game_id FROM customers WHERE is_guest = 0 ORDER BY name")->fetchAll();
 
+$selectedCustomer = null;
+if ($isEdit && !empty($order['customer_id'])) {
+    $selectedStmt = $db->prepare("SELECT id, name, phone, game_id, is_guest FROM customers WHERE id = ?");
+    $selectedStmt->execute([$order['customer_id']]);
+    $selectedCustomer = $selectedStmt->fetch();
+}
+
 // Rank suggestions
 $rankSuggestions = [];
 $isMythicAdded = false;
@@ -157,18 +164,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label>NAMA CUSTOMER</label>
                 <input type="text" id="customerSearch" name="customer_name_input" class="form-control"
                        placeholder="Ketik nama pelanggan..."
-                       value="<?= $isEdit ? sanitize($db->query("SELECT name FROM customers WHERE id = " . $order['customer_id'])->fetchColumn()) : '' ?>">
+                       value="<?= ($isEdit && $selectedCustomer) ? sanitize($selectedCustomer['name']) : '' ?>">
                 <input type="hidden" name="customer_id" id="customerId" value="<?= $isEdit ? $order['customer_id'] : '' ?>">
                 <div class="autocomplete-list" id="customerList">
                     <?php foreach ($customers as $c): ?>
                     <div class="autocomplete-item" data-id="<?= $c['id'] ?>" data-name="<?= sanitize($c['name']) ?>"
                          data-phone="<?= sanitize($c['phone']) ?>" data-gameid="<?= sanitize($c['game_id']) ?>">
                         <?= sanitize($c['name']) ?>
-                        <small>ID: <?= sanitize($c['game_id'] ?? '-') ?> · <?= sanitize(formatCustomerContact($c['phone'] ?? '')) ?></small>
+                        <small><span class="badge badge-success" style="padding:2px 6px; font-size:10px; margin-right:6px;">Terdaftar</span>ID: <?= sanitize($c['game_id'] ?? '-') ?> · <?= sanitize(formatCustomerContact($c['phone'] ?? '')) ?></small>
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <small style="color:var(--text-muted); font-size:11px;">Pilih dari daftar atau ketik nama baru. Pelanggan baru otomatis terdaftar.</small>
+                <div id="registeredCustomerHint" style="display:<?= ($selectedCustomer && !(int)$selectedCustomer['is_guest']) ? 'block' : 'none' ?>; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid rgba(91,140,90,0.3); background:rgba(91,140,90,0.08); font-size:12px; color:var(--success);">
+                    <strong style="display:block; margin-bottom:2px;">Pelanggan terdaftar terpilih</strong>
+                    <span id="registeredCustomerMeta">
+                        <?= ($selectedCustomer && !(int)$selectedCustomer['is_guest']) ? sanitize($selectedCustomer['name'] . ' · ID: ' . ($selectedCustomer['game_id'] ?: '-')) : '' ?>
+                    </span>
+                </div>
+                <small style="color:var(--text-muted); font-size:11px;">Pilih nama dari daftar untuk menggunakan pelanggan terdaftar. Jika ketik nama baru, sistem akan membuat data baru.</small>
             </div>
 
             <div id="newCustomerFields" style="display:none; padding:14px; background:var(--bg-input); border-radius:var(--radius-sm); margin-bottom:16px; border:1px solid var(--border);">
@@ -340,6 +353,19 @@ const searchInput = document.getElementById('customerSearch');
 const customerList = document.getElementById('customerList');
 const customerIdInput = document.getElementById('customerId');
 const newCustomerFields = document.getElementById('newCustomerFields');
+const registeredHint = document.getElementById('registeredCustomerHint');
+const registeredMeta = document.getElementById('registeredCustomerMeta');
+
+function showRegisteredHint(name, gameId) {
+    if (!registeredHint || !registeredMeta) return;
+    registeredMeta.textContent = `${name} · ID: ${gameId || '-'}`;
+    registeredHint.style.display = 'block';
+}
+
+function hideRegisteredHint() {
+    if (!registeredHint) return;
+    registeredHint.style.display = 'none';
+}
 
 if (searchInput) {
     searchInput.addEventListener('input', function() {
@@ -364,8 +390,11 @@ if (searchInput) {
         if (query.length > 0 && !hasMatch) {
             newCustomerFields.style.display = 'block';
             customerIdInput.value = '';
+            hideRegisteredHint();
         } else if (query.length === 0) {
             newCustomerFields.style.display = 'none';
+            customerIdInput.value = '';
+            hideRegisteredHint();
         }
     });
 
@@ -385,6 +414,7 @@ if (searchInput) {
             customerIdInput.value = this.dataset.id;
             customerList.classList.remove('show');
             newCustomerFields.style.display = 'none';
+            showRegisteredHint(this.dataset.name, this.dataset.gameid);
         });
     });
 }
