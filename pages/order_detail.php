@@ -117,6 +117,14 @@ $jokiTypeDisplay = $jokiTypeLabels[$order['joki_type'] ?? ''] ?? null;
 
 // Contact parsing
 $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
+
+$nextStatuses = [
+    'unassigned' => ['in_progress' => 'Mulai Kerjakan'],
+    'in_progress' => ['pending_verification' => 'Minta Verifikasi'],
+    'pending_verification' => ['completed' => 'Selesaikan Pesanan', 'in_progress' => 'Kembali ke Progress'],
+    'completed' => []
+];
+$actions = $nextStatuses[$order['status']] ?? [];
 ?>
 
 <!-- Breadcrumb + Actions -->
@@ -140,10 +148,11 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
 <!-- 2-Column Detail Layout -->
 <div class="od-grid">
     <!-- LEFT: Order Info Panel -->
-    <div class="od-panel">
-        <div class="od-panel-header">
-            <h3><i class='bx bx-package'></i> Detail Pesanan</h3>
-        </div>
+    <div>
+        <div class="od-panel">
+            <div class="od-panel-header">
+                <h3><i class='bx bx-package'></i> Detail Pesanan</h3>
+            </div>
 
         <div class="od-section">
             <div class="od-row-2col">
@@ -239,6 +248,51 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
             </div>
         </div>
         <?php endif; ?>
+        </div>
+
+        <?php if (!empty($actions)): ?>
+        <div class="od-panel" style="margin-top:16px;">
+            <div class="od-panel-header">
+                <h3><i class='bx bx-bolt'></i> Selesaikan Pesanan</h3>
+            </div>
+            <?php foreach ($actions as $status => $label): ?>
+                <?php if ($status === 'completed'): ?>
+                <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;" id="completeForm">
+                    <input type="hidden" name="update_status" value="1">
+                    <input type="hidden" name="new_status" value="completed">
+                    <div class="proof-upload-section" style="margin-bottom:12px;">
+                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                            <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti *
+                        </label>
+                        <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*" capture="environment" style="display:none;" required>
+                        <div class="proof-drop-zone" id="proofDropZone">
+                            <div id="proofPlaceholder">
+                                <i class='bx bx-cloud-upload pdz-icon'></i>
+                                <p class="pdz-text">Seret, tempel (Ctrl+V), atau klik</p>
+                                <p class="pdz-hint">JPG, PNG, WEBP, GIF</p>
+                            </div>
+                            <div id="proofPreview" style="display:none;">
+                                <img id="proofPreviewImg" src="" alt="Preview" class="pdz-preview">
+                                <span class="pdz-change">📷 Ganti gambar</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width:100%;" onclick="return validateProofPhoto()">
+                        <i class='bx bx-check-circle'></i> Selesaikan Pesanan
+                    </button>
+                </form>
+                <?php else: ?>
+                <form method="POST" style="margin-bottom:8px;">
+                    <input type="hidden" name="update_status" value="1">
+                    <input type="hidden" name="new_status" value="<?= $status ?>">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class='bx bx-right-arrow-alt'></i> <?= $label ?>
+                    </button>
+                </form>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- RIGHT: Payment + Worker + Actions -->
@@ -298,61 +352,6 @@ $customerContact = parseCustomerContact($order['customer_phone'] ?? '');
             </div>
             <?php endif; ?>
         </div>
-
-        <!-- Quick Actions -->
-        <?php
-        $nextStatuses = [
-            'unassigned' => ['in_progress' => 'Mulai Kerjakan'],
-            'in_progress' => ['pending_verification' => 'Minta Verifikasi'],
-            'pending_verification' => ['completed' => 'Selesaikan Pesanan', 'in_progress' => 'Kembali ke Progress'],
-            'completed' => []
-        ];
-        $actions = $nextStatuses[$order['status']] ?? [];
-        ?>
-
-        <?php if (!empty($actions)): ?>
-        <div class="od-panel">
-            <div class="od-panel-header">
-                <h3><i class='bx bx-bolt'></i> Aksi Cepat</h3>
-            </div>
-            <?php foreach ($actions as $status => $label): ?>
-                <?php if ($status === 'completed'): ?>
-                <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;" id="completeForm">
-                    <input type="hidden" name="update_status" value="1">
-                    <input type="hidden" name="new_status" value="completed">
-                    <div class="proof-upload-section" style="margin-bottom:12px;">
-                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
-                            <i class='bx bx-camera' style="color:var(--success);"></i> Upload Bukti *
-                        </label>
-                        <input type="file" name="proof_photo" id="proofPhotoInput" accept="image/*" capture="environment" style="display:none;" required>
-                        <div class="proof-drop-zone" id="proofDropZone">
-                            <div id="proofPlaceholder">
-                                <i class='bx bx-cloud-upload pdz-icon'></i>
-                                <p class="pdz-text">Seret, tempel (Ctrl+V), atau klik</p>
-                                <p class="pdz-hint">JPG, PNG, WEBP, GIF</p>
-                            </div>
-                            <div id="proofPreview" style="display:none;">
-                                <img id="proofPreviewImg" src="" alt="Preview" class="pdz-preview">
-                                <span class="pdz-change">📷 Ganti gambar</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success" style="width:100%;" onclick="return validateProofPhoto()">
-                        <i class='bx bx-check-circle'></i> Selesaikan Pesanan
-                    </button>
-                </form>
-                <?php else: ?>
-                <form method="POST" style="margin-bottom:8px;">
-                    <input type="hidden" name="update_status" value="1">
-                    <input type="hidden" name="new_status" value="<?= $status ?>">
-                    <button type="submit" class="btn btn-primary" style="width:100%;">
-                        <i class='bx bx-right-arrow-alt'></i> <?= $label ?>
-                    </button>
-                </form>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
 
         <?php if ($isCompleted): ?>
         <div class="od-panel">
