@@ -1991,6 +1991,11 @@ textarea.form-control {
     gap: 14px;
 }
 
+.order-cards-pagination {
+    justify-content: center;
+    margin-top: 18px;
+}
+
 .order-card {
     background: var(--bg-card);
     border: 1px solid rgba(104, 93, 84, 0.15);

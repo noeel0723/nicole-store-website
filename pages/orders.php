@@ -108,7 +108,7 @@ $allOrders = $stmt->fetchAll();
     </div>
 </div>
 <?php else: ?>
-<div class="order-cards-grid">
+<div class="order-cards-grid" id="ordersCardsGrid">
     <?php foreach ($allOrders as $o): ?>
     <?php
     $workerLabel = '<span style="color:var(--danger)">Belum ditugaskan</span>';
@@ -118,7 +118,7 @@ $allOrders = $stmt->fetchAll();
         $workerLabel = '<span style="color:var(--primary); font-weight:600;">Admin</span>';
     }
     ?>
-    <div class="order-card status-<?= $o['status'] ?>">
+    <div class="order-card order-card-item status-<?= $o['status'] ?>">
         <div class="order-card-header">
             <div class="oc-left">
                 <div class="oc-avatar">
@@ -156,7 +156,9 @@ $allOrders = $stmt->fetchAll();
             <span class="oc-price"><?= formatRupiah($o['price']) ?></span>
             <div class="oc-actions">
                 <a href="index.php?page=order_detail&id=<?= $o['id'] ?>" class="btn-icon" title="Detail"><i class='bx bx-show'></i></a>
+                <?php if ($o['status'] !== 'completed'): ?>
                 <a href="index.php?page=order_form&id=<?= $o['id'] ?>" class="btn-icon" title="Edit"><i class='bx bx-edit'></i></a>
+                <?php endif; ?>
                 <a href="index.php?page=orders&delete=<?= $o['id'] ?>" class="btn-icon" title="Hapus"
                    onclick="return confirm('Yakin ingin menghapus pesanan ini?')"><i class='bx bx-trash' style="color:var(--danger)"></i></a>
             </div>
@@ -164,4 +166,60 @@ $allOrders = $stmt->fetchAll();
     </div>
     <?php endforeach; ?>
 </div>
+<div class="table-pagination order-cards-pagination" id="ordersCardsPagination"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = Array.from(document.querySelectorAll('#ordersCardsGrid .order-card-item'));
+    const pagination = document.getElementById('ordersCardsPagination');
+    if (!pagination || cards.length <= 15) {
+        if (pagination) pagination.style.display = 'none';
+        return;
+    }
+
+    const perPage = 15;
+    const totalPages = Math.ceil(cards.length / perPage);
+    let currentPage = 1;
+
+    function createBtn(label, page, active, disabled) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'page-btn' + (active ? ' active' : '');
+        btn.textContent = label;
+        btn.disabled = disabled;
+        if (!disabled) {
+            btn.addEventListener('click', function() {
+                currentPage = page;
+                renderCards();
+                renderPagination();
+            });
+        }
+        return btn;
+    }
+
+    function renderCards() {
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        cards.forEach((card, idx) => {
+            card.style.display = (idx >= start && idx < end) ? '' : 'none';
+        });
+    }
+
+    function renderPagination() {
+        pagination.innerHTML = '';
+        pagination.appendChild(createBtn('Prev', currentPage - 1, false, currentPage === 1));
+
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        for (let page = startPage; page <= endPage; page++) {
+            pagination.appendChild(createBtn(String(page), page, page === currentPage, false));
+        }
+
+        pagination.appendChild(createBtn('Next', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    renderCards();
+    renderPagination();
+});
+</script>
 <?php endif; ?>
